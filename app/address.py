@@ -38,6 +38,7 @@ class ConfigureAdresses(QDialog):
             open_address_button.setFixedSize(300, 80)
             open_address_button.clicked.connect(partial(self.open_address, address=address))
             delete_button = QPushButton("Удалить")
+            delete_button.adjustSize()
             delete_button.setFixedSize(70, 25)
             delete_button.clicked.connect(partial(self.delete_address, address=address))
             layout.addRow(open_address_button, delete_button)
