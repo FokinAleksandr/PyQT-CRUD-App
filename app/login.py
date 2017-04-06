@@ -56,7 +56,11 @@ class LoginWindow(QDialog):
                         self.host_input.text(), self.port_input.text(), self.db_input.text()
         )
         try:
+<<<<<<< HEAD
             engine = sqlalchemy.create_engine(url)
+=======
+            engine = sqlalchemy.create_engine(url, echo=True)
+>>>>>>> First commit. Registration almost done
             data.Base.metadata.create_all(engine)
         except ValueError:
             QMessageBox.warning(self, 'Ошибка!', 'Неправильно введены данные!')
