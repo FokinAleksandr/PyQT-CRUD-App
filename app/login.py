@@ -28,9 +28,9 @@ class LoginWindow(QDialog):
         self.password_input.setEchoMode(QLineEdit.Password)
         self.db_input = QLineEdit('diplom')
 
-        ipRange = "(?:[0-1]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])"   # Часть регулярного выржение
+        ip_range = "(?:[0-1]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])"   # Часть регулярного выржение
         # Само регулярное выражение
-        ipRegex = QRegExp("^" + ipRange + "\\." + ipRange + "\\." + ipRange + "\\." + ipRange + "$")
+        ipRegex = QRegExp("^" + ip_range + "\\." + ip_range + "\\." + ip_range + "\\." + ip_range + "$")
         ipValidator = QRegExpValidator(ipRegex)   # Валидатор для QLineEdit
         self.host_input = QLineEdit('127.0.0.1')
         self.host_input.setValidator(ipValidator)
