@@ -12,6 +12,7 @@ from PyQt5.QtGui import QIcon, QRegExpValidator
 from PyQt5.QtCore import Qt, QRegExp
 import data
 
+
 class LoginWindow(QDialog):
     def __init__(self):
         QDialog.__init__(self)
@@ -28,10 +29,9 @@ class LoginWindow(QDialog):
         self.password_input.setEchoMode(QLineEdit.Password)
         self.db_input = QLineEdit('diplom')
 
-        ipRange = "(?:[0-1]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])"   # Часть регулярного выржение
-        # Само регулярное выражение
-        ipRegex = QRegExp("^" + ipRange + "\\." + ipRange + "\\." + ipRange + "\\." + ipRange + "$")
-        ipValidator = QRegExpValidator(ipRegex)   # Валидатор для QLineEdit
+        ip_range = "(?:[0-1]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])"
+        ipRegex = QRegExp("^" + ip_range + "\\." + ip_range + "\\." + ip_range + "\\." + ip_range + "$")
+        ipValidator = QRegExpValidator(ipRegex)
         self.host_input = QLineEdit('127.0.0.1')
         self.host_input.setValidator(ipValidator)
 
@@ -63,6 +63,6 @@ class LoginWindow(QDialog):
         except Exception:        
             QMessageBox.warning(self, 'Ошибка!', 'Не удается подключиться к базе данных')   
         else:
-            data.Session = sessionmaker(bind=engine)
+            data.Session = sessionmaker(bind=engine, query_cls=data.Query)
             self.accept()
         

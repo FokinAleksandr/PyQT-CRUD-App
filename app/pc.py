@@ -5,13 +5,14 @@ import os
 import data
 import psycopg2
 from functions_ import get_or_create
-from sqlalchemy.sql import exists
+from sqlalchemy.sql.operators import exists
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import (QWidget, QMessageBox, QPushButton,
-                             QToolTip, QDialog, QLineEdit, QCheckBox, QComboBox,
-                             QFormLayout, QVBoxLayout, QHBoxLayout)
+                             QToolTip, QDialog, QLineEdit, QCheckBox,
+                             QComboBox, QFormLayout, QVBoxLayout, QHBoxLayout)
 from PyQt5.QtGui import (QIcon, QFont)
 from PyQt5.QtCore import Qt
+
 
 
 class RegisterPC(QDialog):
@@ -34,8 +35,8 @@ class RegisterPC(QDialog):
         back_button.setToolTip('Возвращаемся назад')
         back_button.clicked.connect(self.close)
         submit_button = QPushButton('Внести в базу данных')
-        submit_button.setToolTip('Зарегистрировать очередного <b>работягу</b>?')
-        submit_button.clicked.connect(self.process_data)
+        submit_button.setToolTip('Зарегистрировать <b>работягу</b>?')
+        submit_button.clicked.connect(self.validate_input)
         buttons_layout.addWidget(back_button, alignment = Qt.AlignRight)
         buttons_layout.addWidget(submit_button)
 
@@ -43,30 +44,38 @@ class RegisterPC(QDialog):
 
         self.pc_name_edit = QLineEdit()
         self.pc_name_edit.setClearButtonEnabled(True)
-        form_layout.addRow('Имя компьютера:<font color="red">*</font>', self.pc_name_edit)
+        form_layout.addRow(
+            'Имя компьютера:<font color="red">*</font>', self.pc_name_edit
+        )
 
         self.mac_edit = QLineEdit()
         self.mac_edit.setClearButtonEnabled(True)
-        form_layout.addRow('MAC-адрес:<font color="red">*</font>', self.mac_edit)
+        form_layout.addRow(
+            'MAC-адрес:<font color="red">*</font>', self.mac_edit
+        )
 
         self.power_socket_edit = QComboBox()
-        self.power_socket_edit.setEditable(True)
-        items = [row.name for row in self.session.query(data.PowerSocket) if row.name]      
-        self.power_socket_edit.addItems(items)
+        self.power_socket_edit.setEditable(True) 
+        self.session.query(data.PowerSocket.name).values()
+        self.power_socket_edit.addItems(
+            self.session.query(data.PowerSocket.name).values()
+        )
         self.power_socket_edit.setCurrentText('')
         form_layout.addRow('Номер розетки:', self.power_socket_edit)
 
         self.connection_type_edit = QComboBox()
         self.connection_type_edit.setEditable(True)
-        items = [row.name for row in self.session.query(data.ConnectionType) if row.name]
-        self.connection_type_edit.addItems(items)
+        self.connection_type_edit.addItems(
+            self.session.query(data.ConnectionType.name).values()
+        )
         self.connection_type_edit.setCurrentText('')
         form_layout.addRow('Как подлючен:', self.connection_type_edit)
 
         self.domain_edit = QComboBox()
         self.domain_edit.setEditable(True)
-        items = [row.name for row in self.session.query(data.Domain) if row.name]
-        self.domain_edit.addItems(items)
+        self.domain_edit.addItems(
+            self.session.query(data.Domain.name).values()
+        )
         self.domain_edit.setCurrentText('')
         form_layout.addRow('Домен:', self.domain_edit)
 
@@ -76,22 +85,25 @@ class RegisterPC(QDialog):
 
         self.windows_os_edit = QComboBox()
         self.windows_os_edit.setEditable(True)
-        items = [row.name for row in self.session.query(data.Windows) if row.name]
-        self.windows_os_edit.addItems(items)
+        self.windows_os_edit.addItems(
+            self.session.query(data.Windows.name).values()
+        )
         self.windows_os_edit.setCurrentText('')
         form_layout.addRow('Windows OS:', self.windows_os_edit)
 
         self.ms_office_edit = QComboBox()
         self.ms_office_edit.setEditable(True)
-        items = [row.name for row in self.session.query(data.Office) if row.name]
-        self.ms_office_edit.addItems(items)
+        self.ms_office_edit.addItems(
+            self.session.query(data.Office.name).values()
+        )
         self.ms_office_edit.setCurrentText('')
         form_layout.addRow('Microsoft Office:', self.ms_office_edit)
 
         self.antivirus_edit = QComboBox()
         self.antivirus_edit.setEditable(True)
-        items = [row.name for row in self.session.query(data.Antivirus) if row.name]
-        self.antivirus_edit.addItems(items)
+        self.antivirus_edit.addItems(
+            self.session.query(data.Antivirus.name).values()
+        )
         self.antivirus_edit.setCurrentText('')
         form_layout.addRow('Антивирус:', self.antivirus_edit)
 
@@ -129,38 +141,64 @@ class RegisterPC(QDialog):
         form_layout.addRow(buttons_layout)
 
     @QtCore.pyqtSlot()
-    def process_data(self):
+    def validate_input(self):
         if not self.mac_edit.text() or not self.pc_name_edit.text():
-            QMessageBox.warning(self,'Предупреждение',"Поля: 'Имя компьютера' и 'MAC-адрес' обязательны для заполнения")
+            QMessageBox.warning(
+                self,'Предупреждение',
+                "Поля: 'Имя компьютера' и 'MAC-адрес' обязательны для заполнения"
+            )
             return
 
         stmt = self.session.query(data.PcName).join(data.Domain).\
             filter(data.PcName.name==self.pc_name_edit.text()).\
             filter(data.Domain.name==self.domain_edit.currentText())
         if self.session.query(stmt.exists()).scalar():
-            QMessageBox.warning(self,'Предупреждение','Введенное имя компьютера уже существует в базе')
+            QMessageBox.warning(self, 'Предупреждение', 
+                                'Введенное имя компьютера уже существует в базе'
+            )
             return
 
-        stmt = self.session.query(data.Pc).filter(data.Pc.mac_address==self.mac_edit.text())
+        stmt = self.session.query(data.Pc).\
+            filter(data.Pc.mac_address==self.mac_edit.text())
         if self.session.query(stmt.exists()).scalar():
-            QMessageBox.warning(self,'Предупреждение','Введенный мак-адрес уже существует в базе')
+            QMessageBox.warning(
+                self, 'Предупреждение', 'Введенный мак-адрес уже существует в базе'
+            )
             return
-
-        self.domain = get_or_create(self.session, data.Domain, name = self.domain_edit.currentText())
-        self.connectiontype = get_or_create(self.session, data.ConnectionType, name = self.connection_type_edit.currentText())
-        self.powersocket = get_or_create(self.session, data.PowerSocket, name = self.power_socket_edit.currentText())
-        self.windows = get_or_create(self.session, data.Windows, name = self.windows_os_edit.currentText())
-        self.office = get_or_create(self.session, data.Office, name = self.ms_office_edit.currentText())
-        self.antivirus = get_or_create(self.session, data.Antivirus, name = self.antivirus_edit.currentText())
 
         reply = QMessageBox.question(self, 'Уведомление',
             "Точно занести в базу нового бедолагу?", QMessageBox.Yes |
             QMessageBox.No, QMessageBox.No)
         if reply == QMessageBox.Yes:
-            self.database_commit()
+            self.process_data()
             self.accept()
 
-    def database_commit(self):
+    def process_data(self):
+        self.domain = get_or_create(
+            self.session, data.Domain, 
+            name=self.domain_edit.currentText()
+        )
+        self.connectiontype = get_or_create(
+            self.session, data.ConnectionType,             
+            name=self.connection_type_edit.currentText()
+        )
+        self.powersocket = get_or_create(
+            self.session, data.PowerSocket, 
+            name=self.power_socket_edit.currentText()
+        )
+        self.windows = get_or_create(
+            self.session, data.Windows, 
+            name=self.windows_os_edit.currentText()
+        )
+        self.office = get_or_create(
+            self.session, data.Office, 
+            name=self.ms_office_edit.currentText()
+        )
+        self.antivirus = get_or_create(
+            self.session, data.Antivirus, 
+            name=self.antivirus_edit.currentText()
+        )
+
         self.pcname = data.PcName(
             name = self.pc_name_edit.text()
         )

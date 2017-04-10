@@ -36,15 +36,15 @@ class MainWindow(QMainWindow):
         employee_action.triggered.connect(self.add_employee)
         pc_action = QAction(QIcon(r'pics\pc.png'), 'Pc', self)
         pc_action.triggered.connect(self.add_pc)
-        adress_action = QAction(QIcon(r'pics\home.png'), 'Adress', self)
-        adress_action.triggered.connect(self.add_address)
+        address_action = QAction(QIcon(r'pics\home.png'), 'Address', self)
+        address_action.triggered.connect(self.add_address)
         refresh_action = QAction(QIcon(r'pics\refresh.png'), 'Refresh', self)
         refresh_action.triggered.connect(self.refresh)
         settings_action = QAction(QIcon(r'pics\settings.png'), 'Settings', self)
         settings_action.triggered.connect(self.settings)
         
         toolbar = self.addToolBar('asdf')
-        toolbar.addActions([employee_action, pc_action, adress_action, refresh_action, settings_action])
+        toolbar.addActions([employee_action, pc_action, address_action, refresh_action, settings_action])
 
 
     def display_data(self):
@@ -93,7 +93,7 @@ class MainWindow(QMainWindow):
     def add_address(self):
         session = data.Session()
         try:
-            address_window = address.ConfigureAdresses(session)
+            address_window = address.ConfigureAddresses(session)
             if address_window.exec_() == QDialog.Accepted:
                 session.commit()
                 print("закоммитили")
