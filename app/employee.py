@@ -68,7 +68,7 @@ class RegisterClient(QDialog):
 
         self.position_edit = QComboBox()
         self.position_edit.setEditable(True)
-        items = [row.name for row in self.session.query(data.Position) if row.name]      
+        items = [row.name for row in self.session.query(data.Position) if row.name]    
         self.position_edit.addItems(items)
         self.position_edit.setCurrentText('')
         form_layout.addRow('Должность:', self.position_edit)

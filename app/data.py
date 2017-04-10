@@ -5,14 +5,26 @@ Tables
 """
 import sqlalchemy
 import psycopg2
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, exc
 from sqlalchemy import (Table, Column, Integer, String, Boolean, ForeignKey,
                         UniqueConstraint, PrimaryKeyConstraint)
 from sqlalchemy.ext.declarative import declarative_base
-
+from sqlalchemy.orm.query import Query as _Query
 
 Base = declarative_base()
 Session = None
+
+class Query(_Query):
+    def values(self):
+        try:
+            return [i for (i,) in self]
+        except ValueError as e:
+            raise MultipleValuesFound(str(e))
+
+class MultipleValuesFound(ValueError, exc.MultipleResultsFound):
+    """
+    raised when multiple values are found in a single result row
+    """
 
 class Employee(Base):
 	__tablename__   = 'employee'	
@@ -68,9 +80,9 @@ class Block(Base):
     __table_args__  = (UniqueConstraint('name', 'address_id', name='uix_name_address_id'),)
     block_id        = Column(Integer, primary_key=True)
     name 	        = Column(String, nullable=False)
-    address_id       = Column(Integer, ForeignKey('address.address_id', ondelete='CASCADE'))
+    address_id      = Column(Integer, ForeignKey('address.address_id', ondelete='CASCADE'))
     room 	        = relationship('Room', back_populates='block', cascade='all, delete-orphan', passive_deletes=True)
-    address          = relationship('Address', back_populates='block')
+    address         = relationship('Address', back_populates='block')
 
 class Address(Base):
     __tablename__   = 'address'
@@ -86,7 +98,7 @@ association_table = Table('association', Base.metadata,
 class Pc(Base):
     __tablename__   = 'pc'
     pc_id           = Column(Integer, ForeignKey("pcname.pc_id"), primary_key=True)
-    mac_address      = Column(String, unique=True, nullable=False)
+    mac_address     = Column(String, unique=True, nullable=False)
     power_socket_id = Column(Integer, ForeignKey('powersocket.power_socket_id'))
     con_type_id     = Column(Integer, ForeignKey('connectiontype.con_type_id'))
     app_server      = Column(String)
@@ -112,7 +124,7 @@ class Pc(Base):
 
 class PcName(Base):
     __tablename__   = 'pcname'
-    #__table_args__  = (UniqueConstraint('name', 'domain_id', name='uix_name_domain_id'),)
+    __table_args__  = (UniqueConstraint('name', 'domain_id', name='uix_name_domain_id'),)
     pc_id           = Column(Integer, primary_key=True)
     name            = Column(String, nullable=False)
     domain_id       = Column(Integer, ForeignKey('domain.domain_id'))
