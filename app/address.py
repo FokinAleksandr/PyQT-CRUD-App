@@ -5,7 +5,6 @@ import os
 import data
 import psycopg2
 from functools import partial
-from functions_ import clear_layout
 from sqlalchemy.orm import exc
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import (QWidget, QMessageBox, QPushButton,
@@ -14,7 +13,7 @@ from PyQt5.QtWidgets import (QWidget, QMessageBox, QPushButton,
                              QListWidgetItem)
 
 from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QSize
 from PyQt5.Qt import QPixmap
 
 class ConfigureAddresses(QDialog):
@@ -52,7 +51,7 @@ class ConfigureAddresses(QDialog):
     def fill_addresses(self):
         self.addresses_list.clear()
         for address in self.session.query(data.Address).all():
-            address_widget = AddressWidget(address.name)
+            address_widget = AddressWidget(address)
             address_widget.delete_button.clicked.connect(
                 partial(self.delete_address, address=address)
             )
@@ -60,27 +59,15 @@ class ConfigureAddresses(QDialog):
                 partial(self.edit_address, address=address)
             )
             address_item = QListWidgetItem()
-            address_item.setSizeHint(address_widget.sizeHint())
+            address_item.setSizeHint(QSize(250, 75))
             self.addresses_list.addItem(address_item)
             self.addresses_list.setItemWidget(address_item, address_widget)    
         add_item = QListWidgetItem()
         add_button = QPushButton("Добавить адрес")
         add_button.clicked.connect(self.add_address)
-        add_item.setSizeHint(address_widget.sizeHint())
+        add_item.setSizeHint(QSize(250, 75))
         self.addresses_list.addItem(add_item)
         self.addresses_list.setItemWidget(add_item, add_button)
-
-    def build_new_address_widget(self, address):
-        widget = AddressWidget(address.name)
-        widget.delete_button.clicked.connect(
-            partial(self.delete_address, address=address)
-        )
-        widget.view_button.clicked.connect(
-            partial(self.edit_address, address=address)
-        )
-        item = QListWidgetItem()
-        item.setSizeHint(widget.sizeHint())
-        return item, widget
 
     @QtCore.pyqtSlot()
     def add_address(self):
@@ -105,7 +92,7 @@ class ConfigureAddresses(QDialog):
                     self, 'Предупреждение', 'Адрес уже существует!'
                 )
 
-    @QtCore.pyqtSlot()
+    @QtCore.pyqtSlot(data.Address)
     def edit_address(self, address):
         text, ok = QInputDialog.getText(
             self, 'Изменение адреса', 'Новое название:'
@@ -127,7 +114,7 @@ class ConfigureAddresses(QDialog):
                     self, 'Предупреждение', 'Адрес уже существует!'
                 )
 
-    @QtCore.pyqtSlot()
+    @QtCore.pyqtSlot(data.Address)
     def delete_address(self, address):
         reply = QMessageBox.question(self, 'Уведомление',
             "Удалить адрес {}?".format(address.name),
@@ -139,34 +126,32 @@ class ConfigureAddresses(QDialog):
     @QtCore.pyqtSlot()
     def fill_blocks(self):
         self.blocks_list.clear()
-        index = self.addresses_list.currentRow()
-        address = self.session.query(data.Address).all()[index]
+        address_widget = self.addresses_list.itemWidget(self.addresses_list.currentItem())
         blocks = self.session.query(data.Block).\
-            with_parent(address).all()
-
+            with_parent(address_widget.address).all()
         for block in blocks:
             block_item = QListWidgetItem() 
-            block_widget = BlockWidget(block.name)
+            block_widget = BlockWidget(block)
             block_widget.delete_button.clicked.connect(
                 partial(self.delete_block, block=block)
             )
             block_widget.view_button.clicked.connect(
                 partial(self.edit_block, block=block)
             )
-            block_item.setSizeHint(block_widget.sizeHint())
+            block_item.setSizeHint(QSize(250, 75))
             self.blocks_list.addItem(block_item)
             self.blocks_list.setItemWidget(block_item, block_widget)
             
         add_item = QListWidgetItem()
         add_button = QPushButton("Добавить корпус")
         add_button.clicked.connect(
-            partial(self.add_block, address=address)
+            partial(self.add_block, address=address_widget.address)
         )
-        add_item.setSizeHint(add_button.sizeHint())
+        add_item.setSizeHint(QSize(250, 75))
         self.blocks_list.addItem(add_item)
         self.blocks_list.setItemWidget(add_item, add_button)
 
-    @QtCore.pyqtSlot()
+    @QtCore.pyqtSlot(data.Address)
     def add_block(self, address):
         text, ok = QInputDialog.getText(
             self, 'Добавление нового корпуса', 'Корпус:'
@@ -182,15 +167,16 @@ class ConfigureAddresses(QDialog):
                     with_parent(address).\
                     filter_by(name=str(text)).one()
             except exc.NoResultFound:
-                address.block.append(data.Block(name=str(text)))
-                self.session.add(address)
+                new_block = data.Block(name=str(text))
+                address.block.append(new_block)
+                self.session.add(new_block)
                 self.fill_blocks()
             else:
                 QMessageBox.warning(
                     self, 'Предупреждение', 'Корпус уже существует!'
                 )
 
-    @QtCore.pyqtSlot()
+    @QtCore.pyqtSlot(data.Block)
     def edit_block(self, block):
         text, ok = QInputDialog.getText(
             self, 'Изменение корпуса', 'Новое название:'
@@ -213,7 +199,7 @@ class ConfigureAddresses(QDialog):
                     self, 'Предупреждение', 'Корпус уже существует!'
                 )
 
-    @QtCore.pyqtSlot()
+    @QtCore.pyqtSlot(data.Block)
     def delete_block(self, block):
         reply = QMessageBox.question(self, 'Уведомление',
             "Удалить корпус {}?".format(block.name),
@@ -261,13 +247,14 @@ class ConfigureAddresses(QDialog):
             QDialog.accept(self)
 
 class AddressWidget(QWidget):
-    def __init__(self, address_name=None):
+    def __init__(self, address):
         QWidget.__init__(self)
+        self.address = address
         self.icon = QLabel()
         pixmap = QPixmap(r'pics\address.png')
         pixmap = pixmap.scaledToWidth(40)
         self.icon.setPixmap(pixmap)
-        self.name = QLabel("<h3>{}<h3>".format(address_name))
+        self.name = QLabel("<h3>{}<h3>".format(address.name))
         self.view_button = QPushButton("Изменить")
         self.view_button.setFixedWidth(80)
         self.delete_button = QPushButton("Удалить")
@@ -284,13 +271,14 @@ class AddressWidget(QWidget):
         layout.addLayout(buttons_layout)
         
 class BlockWidget(QWidget):
-    def __init__(self, block_name=None):
+    def __init__(self, block):
         QWidget.__init__(self)
+        self.block = block
         self.icon = QLabel()
         pixmap = QPixmap(r'pics\block.png')
         pixmap = pixmap.scaledToWidth(40)
         self.icon.setPixmap(pixmap)
-        self.name = QLabel("<h3>{}<h3>".format(block_name))
+        self.name = QLabel("<h3>{}<h3>".format(block.name))
         self.view_button = QPushButton("Изменить")
         self.view_button.setFixedWidth(80)
         self.delete_button = QPushButton("Удалить")
