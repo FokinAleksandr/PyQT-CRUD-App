@@ -5,12 +5,13 @@ Login
 """
 import sqlalchemy
 import psycopg2
+from app import data
 from sqlalchemy.orm import sessionmaker
 from PyQt5.QtWidgets import (QPushButton, QLabel, QLineEdit, QDialog,
                              QMessageBox, QFormLayout, QDialogButtonBox)
 from PyQt5.QtGui import QIcon, QRegExpValidator
 from PyQt5.QtCore import Qt, QRegExp
-import data
+
 
 
 class LoginWindow(QDialog):

@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 import sys
 import os
-import data
 import psycopg2
+from app.dialogs.exitmethods import Dialog
+from app import data
 from functools import partial
 from sqlalchemy.orm import exc
 from PyQt5 import QtCore
@@ -16,7 +17,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.Qt import QPixmap
 
-class ConfigureAddresses(QDialog):
+class ConfigureAddresses(Dialog):
     def __init__(self, session):
         QDialog.__init__(self)       
         self.session = session
@@ -31,7 +32,13 @@ class ConfigureAddresses(QDialog):
 
         self.addresses_list = QListWidget()        
         self.blocks_list = QListWidget()
+        self.blocks_list.itemDoubleClicked[QListWidgetItem].connect(
+            self.edit_block_via_double_click
+        )
         self.addresses_list.itemClicked.connect(self.fill_blocks)
+        self.addresses_list.itemDoubleClicked[QListWidgetItem].connect(
+            self.edit_address_via_double_click
+        )
 
         QVBoxLayout(self)
         lists_layout = QHBoxLayout()
@@ -91,6 +98,11 @@ class ConfigureAddresses(QDialog):
                 QMessageBox.warning(
                     self, 'Предупреждение', 'Адрес уже существует!'
                 )
+
+    @QtCore.pyqtSlot(QListWidgetItem)
+    def edit_address_via_double_click(self, item):
+        address_widget = self.addresses_list.itemWidget(item)
+        self.edit_address(address_widget.address)
 
     @QtCore.pyqtSlot(data.Address)
     def edit_address(self, address):
@@ -176,6 +188,11 @@ class ConfigureAddresses(QDialog):
                     self, 'Предупреждение', 'Корпус уже существует!'
                 )
 
+    @QtCore.pyqtSlot(QListWidgetItem)
+    def edit_block_via_double_click(self, item):
+        block_widget = self.blocks_list.itemWidget(item)
+        self.edit_block(block_widget.block)
+
     @QtCore.pyqtSlot(data.Block)
     def edit_block(self, block):
         text, ok = QInputDialog.getText(
@@ -207,44 +224,7 @@ class ConfigureAddresses(QDialog):
         if reply == QMessageBox.Yes:
             self.session.delete(block)
             self.fill_blocks()
-     
-    def closeEvent(self, evnt):
-        msg_box = QMessageBox(self)
-        msg_box.setIcon(QMessageBox.Question)
-        msg_box.setWindowTitle('Уведомление')
-        msg_box.setText('Сохранить данные?')
-        msg_box.setStandardButtons(
-            QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel
-        )
-        buttonY = msg_box.button(QMessageBox.Yes)
-        buttonY.setText('Да')
-        buttonN = msg_box.button(QMessageBox.No)
-        buttonN.setText('Нет')
-        buttonC = msg_box.button(QMessageBox.Cancel)
-        buttonC.setText('Отменить')
-        msg_box.exec_()
-
-        if msg_box.clickedButton() == buttonY:
-            QDialog.accept(self)
-        elif msg_box.clickedButton() == buttonN:
-            QDialog.closeEvent(self, evnt)
-        elif msg_box.clickedButton() == buttonC:
-            evnt.ignore()
-
-    def accept(self):
-        msg_box = QMessageBox(self)
-        msg_box.setIcon(QMessageBox.Question)
-        msg_box.setWindowTitle('Уведомление')
-        msg_box.setText('Подтвердить ввод данных?')
-        msg_box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
-        buttonY = msg_box.button(QMessageBox.Yes)
-        buttonY.setText('Да')
-        buttonN = msg_box.button(QMessageBox.No)
-        buttonN.setText('Нет')
-        msg_box.exec_()
-
-        if msg_box.clickedButton() == buttonY:
-            QDialog.accept(self)
+    
 
 class AddressWidget(QWidget):
     def __init__(self, address):

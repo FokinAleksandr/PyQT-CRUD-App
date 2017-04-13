@@ -4,15 +4,15 @@
 Десктопное приложение с использованием SQLAlchemy и PyQT
 """
 import sys
-import login
-import main
+from app.dialogs import login
+from app import main
 
 from PyQt5.QtWidgets import QApplication, QDialog
 
 ###########################################################################################################
        
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
+def run():
+    app = QApplication([])
     
     login_window = login.LoginWindow()
 
