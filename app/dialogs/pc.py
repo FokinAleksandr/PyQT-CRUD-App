@@ -47,20 +47,20 @@ class RegisterPC(Dialog):
         self.pc_name_edit.setClearButtonEnabled(True)
         form_layout.addRow(
             'Имя компьютера:<font color="red">*</font>', self.pc_name_edit
-        )
+            )
 
         self.mac_edit = QLineEdit()
         self.mac_edit.setClearButtonEnabled(True)
         form_layout.addRow(
             'MAC-адрес:<font color="red">*</font>', self.mac_edit
-        )
+            )
 
         self.power_socket_edit = QComboBox()
         self.power_socket_edit.setEditable(True) 
         self.session.query(data.PowerSocket.name).values()
         self.power_socket_edit.addItems(
             self.session.query(data.PowerSocket.name).values()
-        )
+            )
         self.power_socket_edit.setCurrentText('')
         form_layout.addRow('Номер розетки:', self.power_socket_edit)
 
@@ -68,7 +68,7 @@ class RegisterPC(Dialog):
         self.connection_type_edit.setEditable(True)
         self.connection_type_edit.addItems(
             self.session.query(data.ConnectionType.name).values()
-        )
+            )
         self.connection_type_edit.setCurrentText('')
         form_layout.addRow('Как подлючен:', self.connection_type_edit)
 
@@ -76,7 +76,7 @@ class RegisterPC(Dialog):
         self.domain_edit.setEditable(True)
         self.domain_edit.addItems(
             self.session.query(data.Domain.name).values()
-        )
+            )
         self.domain_edit.setCurrentText('')
         form_layout.addRow('Домен:', self.domain_edit)
 
@@ -88,7 +88,7 @@ class RegisterPC(Dialog):
         self.windows_os_edit.setEditable(True)
         self.windows_os_edit.addItems(
             self.session.query(data.Windows.name).values()
-        )
+            )
         self.windows_os_edit.setCurrentText('')
         form_layout.addRow('Windows OS:', self.windows_os_edit)
 
@@ -96,7 +96,7 @@ class RegisterPC(Dialog):
         self.ms_office_edit.setEditable(True)
         self.ms_office_edit.addItems(
             self.session.query(data.Office.name).values()
-        )
+            )
         self.ms_office_edit.setCurrentText('')
         form_layout.addRow('Microsoft Office:', self.ms_office_edit)
 
@@ -104,7 +104,7 @@ class RegisterPC(Dialog):
         self.antivirus_edit.setEditable(True)
         self.antivirus_edit.addItems(
             self.session.query(data.Antivirus.name).values()
-        )
+            )
         self.antivirus_edit.setCurrentText('')
         form_layout.addRow('Антивирус:', self.antivirus_edit)
 
@@ -146,64 +146,42 @@ class RegisterPC(Dialog):
         if not self.mac_edit.text() or not self.pc_name_edit.text():
             QMessageBox.warning(
                 self,'Предупреждение',
-                "Поля: 'Имя компьютера' и 'MAC-адрес' обязательны для заполнения"
-            )
+                "Поля: 'Имя компьютера' и 'MAC-адрес' -- обязательные"
+                )
             return
 
         stmt = self.session.query(data.PcName).join(data.Domain).\
             filter(data.PcName.name==self.pc_name_edit.text()).\
             filter(data.Domain.name==self.domain_edit.currentText())
         if self.session.query(stmt.exists()).scalar():
-            QMessageBox.warning(self, 'Предупреждение', 
-                                'Введенное имя компьютера уже существует в базе'
-            )
+            QMessageBox.warning(self,
+                'Предупреждение', 
+                'Введенное имя компьютера уже существует в базе'
+                )
             return
 
         stmt = self.session.query(data.Pc).\
             filter(data.Pc.mac_address==self.mac_edit.text())
         if self.session.query(stmt.exists()).scalar():
             QMessageBox.warning(
-                self, 'Предупреждение', 'Введенный мак-адрес уже существует в базе'
-            )
+                self, 'Предупреждение', 'Введенный мак-адрес уже существует'
+                )
             return
 
-        reply = QMessageBox.question(self, 'Уведомление',
-            "Точно занести в базу нового бедолагу?", QMessageBox.Yes |
-            QMessageBox.No, QMessageBox.No)
-        if reply == QMessageBox.Yes:
-            self.process_data()
-            self.accept()
+        self.process_data()
+        self.accept()
 
     def process_data(self):
-        self.domain = get_or_create(
+        pcname = data.PcName(
+            name = self.pc_name_edit.text()
+        )
+
+        pcname.domain = get_or_create(
             self.session, data.Domain, 
             name=self.domain_edit.currentText()
         )
-        self.connectiontype = get_or_create(
-            self.session, data.ConnectionType,             
-            name=self.connection_type_edit.currentText()
-        )
-        self.powersocket = get_or_create(
-            self.session, data.PowerSocket, 
-            name=self.power_socket_edit.currentText()
-        )
-        self.windows = get_or_create(
-            self.session, data.Windows, 
-            name=self.windows_os_edit.currentText()
-        )
-        self.office = get_or_create(
-            self.session, data.Office, 
-            name=self.ms_office_edit.currentText()
-        )
-        self.antivirus = get_or_create(
-            self.session, data.Antivirus, 
-            name=self.antivirus_edit.currentText()
-        )
 
-        self.pcname = data.PcName(
-            name = self.pc_name_edit.text()
-        )
-        self.pc = data.Pc(
+        pc = data.Pc(
             mac_address     = self.mac_edit.text(),
             windows_os_key  = self.windows_os_key_edit.text(),
             ms_office_key   = self.ms_office_key_edit.text(),
@@ -216,10 +194,24 @@ class RegisterPC(Dialog):
             consultant      = self.consultant_edit.isChecked(),
             comments        = self.comments_edit.text(),
         )
-        self.pc.connectiontype = self.connectiontype
-        self.pc.powersocket = self.powersocket
-        self.pc.windows = self.windows
-        self.pc.office = self.office
-        self.pc.antivirus = self.antivirus
-        self.pc.pcname = self.pcname
-        self.pcname.domain = self.domain
+        pc.pcname = pcname
+        pc.connectiontype = get_or_create(
+            self.session, data.ConnectionType,             
+            name=self.connection_type_edit.currentText()
+        )
+        pc.powersocket = get_or_create(
+            self.session, data.PowerSocket, 
+            name=self.power_socket_edit.currentText()
+        )
+        pc.windows = get_or_create(
+            self.session, data.Windows, 
+            name=self.windows_os_edit.currentText()
+        )
+        pc.office = get_or_create(
+            self.session, data.Office, 
+            name=self.ms_office_edit.currentText()
+        )
+        pc.antivirus = get_or_create(
+            self.session, data.Antivirus, 
+            name=self.antivirus_edit.currentText()
+        )

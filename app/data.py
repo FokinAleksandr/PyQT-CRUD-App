@@ -62,7 +62,6 @@ class Phone(Base):
     __tablename__   = 'phone'
     phone_id        = Column(Integer, primary_key=True)
     employee_id     = Column(Integer, ForeignKey('employee.employee_id', ondelete = 'CASCADE'))
-    type            = Column(String, nullable=False)
     number          = Column(String, unique=True, nullable=False)
     employee        = relationship('Employee', back_populates='phone')
 

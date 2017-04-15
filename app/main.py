@@ -38,24 +38,25 @@ class MainWindow(QMainWindow):
         address_action.triggered.connect(self.add_address)
         refresh_action = QAction(QIcon(r'pics\refresh.png'), 'Refresh', self)
         refresh_action.triggered.connect(self.refresh)
-        
         toolbar = self.addToolBar('asdf')
         toolbar.addActions([employee_action, pc_action, address_action, refresh_action])
 
     def display_data(self):
-        test_ = QWidget()
-        a = QPushButton('Жми', test_)
-        b = QPushButton('Жми', test_)
-        c = QPushButton('Жми', test_)
-        lay = QVBoxLayout(test_)
-        lay.addWidget(a, alignment = Qt.AlignAbsolute)
-        lay.addWidget(b)
-        lay.addWidget(c)
-        tab = QTabWidget()
-        tab.addTab(test_, 'Вкладка 1')
-        tab.addTab(QLabel('<b>Содержимое вкладки 2</b>'), 'Вкладка 2')
-        tab.addTab(QLabel('Содержимое вкладки 3'), 'Вкладка 3')
-        self.setCentralWidget(tab)
+        session = data.Session()
+        address_tab = QTabWidget()
+        addresses = session.query(data.Address).all()
+
+        for address in addresses:
+            block_tab = QTabWidget()
+
+            for block in session.query(data.Block).\
+                        with_parent(address):
+                block_tab.addTab(QLabel(block.name), block.name)
+
+            address_tab.addTab(block_tab, address.name)
+
+        session.close()
+        self.setCentralWidget(address_tab)
     
     def add_employee(self):
         session = data.Session()
