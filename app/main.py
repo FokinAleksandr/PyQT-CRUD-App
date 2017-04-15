@@ -65,7 +65,8 @@ class MainWindow(QMainWindow):
             if reg_employee_window.exec_() == QDialog.Accepted:
                 session.commit()
                 print("Закоммитили")
-        except exc.IntegrityError:
+        except exc.IntegrityError as errmsg:
+            print(errmsg)
             session.rollback()
             QMessageBox.critical(self, 'Критическая ошибка', 'Ошибка базы данных. Попробуйте еще раз.')
         else:
@@ -80,7 +81,8 @@ class MainWindow(QMainWindow):
             if reg_pc_window.exec_() == QDialog.Accepted:
                 session.commit()
                 print("Закоммитили")
-        except exc.IntegrityError:
+        except exc.IntegrityError as errmsg:
+            print(errmsg)
             session.rollback()
             QMessageBox.critical(self, 'Критическая ошибка', 'Ошибка базы данных. Попробуйте еще раз.')
         else:

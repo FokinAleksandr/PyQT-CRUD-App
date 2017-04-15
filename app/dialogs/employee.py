@@ -77,7 +77,7 @@ class RegisterClient(Dialog):
 
         self.add_phone_button.clicked.connect(
             partial(self.add_phone)
-        )
+            )
 
         self.email_edit = QLineEdit()
         self.email_edit.setClearButtonEnabled(True)
@@ -87,7 +87,7 @@ class RegisterClient(Dialog):
         self.position_edit.setEditable(True)   
         self.position_edit.addItems(
             self.session.query(data.Position.name).values()
-        )
+            )
         self.position_edit.setCurrentText('')
         form_layout.addRow('Должность:', self.position_edit)
 
@@ -95,17 +95,17 @@ class RegisterClient(Dialog):
         self.department_edit.setEditable(True)
         self.department_edit.addItems(
             self.session.query(data.Department.name).values()
-        )
+            )
         self.department_edit.setCurrentText('')
         form_layout.addRow('Отдел:', self.department_edit)
 
         self.address_edit = QComboBox()
         self.address_edit.addItems(
             self.session.query(data.Address.name).values()
-        )
+            )
         self.address_edit.currentIndexChanged[str].connect(
             self.changed_item_in_address_combobox
-        )
+            )
         form_layout.addRow('Адрес:<font color="red">*</font>', self.address_edit)
 
         self.block_edit = QComboBox()
@@ -115,7 +115,7 @@ class RegisterClient(Dialog):
                 join(data.Address).\
                 filter(data.Address.name==self.address_edit.currentText()).\
                 values()
-        )
+            )
 
         self.room_edit = QLineEdit()
         self.room_edit.setClearButtonEnabled(True)
@@ -175,18 +175,37 @@ class RegisterClient(Dialog):
     def validate_input(self):
         if not self.surname_edit.text()\
            or not self.name_edit.text()\
+           or not self.room_edit.text()\
            or not self.login_edit.text():
             QMessageBox.warning(
                 self,'Предупреждение',
-                "Поля: 'Фамилия', 'Имя' и 'Логин' -- обязательныe"
-            )
-            return    
+                "Поля: 'Фамилия', 'Имя', 'Логин', 'Комната'" +
+                " -- обязательныe"
+                )
+            return
+
+        self.phone_numbers = [
+            lineEdit.text() for lineEdit
+            in self.phone_edit
+            if lineEdit.text() != '+7()--'
+            ]
+
+        test_set = set()
+        for phone_number in self.phone_numbers:
+            if phone_number in test_set:
+                QMessageBox.warning(
+                    self, 'Предупреждение', 'Телефоны совпадают'
+                    )
+                return
+            else:
+                test_set.add(phone_number)
+
         stmt = self.session.query(data.Employee).\
             filter(data.Employee.unique_login==self.login_edit.text())
         if self.session.query(stmt.exists()).scalar():
             QMessageBox.warning(
                 self, 'Предупреждение', 'Нужен уникальный логин'
-            )
+                )
             return
 
         self.process_data()
@@ -218,11 +237,9 @@ class RegisterClient(Dialog):
                 )
             )
 
-        for phone in self.phone_edit:
-            if phone.text()!= '+7()--':
-                employee.phone.append(data.Phone(number=phone.text()))
+        for phone in self.phone_numbers:
+            employee.phone.append(data.Phone(number=phone))
         
-
         block = self.session.query(data.Block).\
                     join(data.Address).\
                     filter(data.Block.name==self.block_edit.currentText()).\
