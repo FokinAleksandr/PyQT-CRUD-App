@@ -151,16 +151,16 @@ class RegisterClient(Dialog):
     @QtCore.pyqtSlot()
     def add_phone(self):
         phone_edit = QLineEdit()
-        phone_edit.setInputMask('+7(999)999-99-99;_');
         self.phone_edit.append(phone_edit)
 
         phone_layout = QHBoxLayout()
         phone_layout.addWidget(phone_edit)
         if len(self.phone_edit) < 3:
             phone_layout.addWidget(self.add_phone_button)
+            self.layout().insertRow(5, "Доп телефон:", phone_layout)
         else:
             self.add_phone_button.deleteLater()
-        self.layout().insertRow(5, "Доп телефон:", phone_layout)
+            self.layout().insertRow(6, "Доп телефон:", phone_layout)
 
     @QtCore.pyqtSlot(str)
     def changed_item_in_address_combobox(self, index):

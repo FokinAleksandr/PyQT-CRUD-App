@@ -42,21 +42,8 @@ class MainWindow(QMainWindow):
         toolbar.addActions([employee_action, pc_action, address_action, refresh_action])
 
     def display_data(self):
-        session = data.Session()
-        address_tab = QTabWidget()
-        addresses = session.query(data.Address).all()
-
-        for address in addresses:
-            block_tab = QTabWidget()
-
-            for block in session.query(data.Block).\
-                        with_parent(address):
-                block_tab.addTab(QLabel(block.name), block.name)
-
-            address_tab.addTab(block_tab, address.name)
-
-        session.close()
-        self.setCentralWidget(address_tab)
+        main_widget = MainWidget()
+        self.setCentralWidget(main_widget)
     
     def add_employee(self):
         session = data.Session()
@@ -116,3 +103,27 @@ class MainWindow(QMainWindow):
         screen_center = QDesktopWidget().availableGeometry().center()
         frame_geometry.moveCenter(screen_center)
         self.move(frame_geometry.topLeft())
+
+
+class MainWidget(QWidget):
+    def __init__(self):
+        QWidget.__init__(self)
+        self.init_ui()
+        self.show()
+
+    def init_ui(self):
+        session = data.Session()
+        QVBoxLayout(self)
+        address_tab = QTabWidget()
+        self.layout().addWidget(address_tab)
+        addresses = session.query(data.Address).all()
+
+        for address in addresses:
+            block_tab = QTabWidget()
+
+            for block in session.query(data.Block).\
+                        with_parent(address):
+                block_tab.addTab(QLabel(block.name), block.name)
+
+            address_tab.addTab(block_tab, address.name)
+        session.close()
