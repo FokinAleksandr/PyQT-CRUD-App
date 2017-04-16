@@ -47,13 +47,13 @@ class RegisterClient(Dialog):
 
         form_layout = QFormLayout(self)
 
-        self.name_edit = QLineEdit()
-        self.name_edit.setClearButtonEnabled(True)
-        form_layout.addRow('Фамилия:<font color="red">*</font>', self.name_edit)
-
         self.surname_edit = QLineEdit()
         self.surname_edit.setClearButtonEnabled(True)
-        form_layout.addRow('Имя:<font color="red">*</font>', self.surname_edit)
+        form_layout.addRow('Фамилия:<font color="red">*</font>', self.surname_edit)
+
+        self.name_edit = QLineEdit()
+        self.name_edit.setClearButtonEnabled(True)
+        form_layout.addRow('Имя:<font color="red">*</font>', self.name_edit)
 
         self.patronymic_edit = QLineEdit()
         self.patronymic_edit.setClearButtonEnabled(True)
@@ -209,7 +209,8 @@ class RegisterClient(Dialog):
             return
 
         self.process_data()
-        self.accept()
+        if not self.accept():
+            self.session.rollback()
 
     def process_data(self):
         employee = data.Employee(

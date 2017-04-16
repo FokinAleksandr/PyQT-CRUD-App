@@ -43,3 +43,6 @@ class Dialog(QDialog):
 
         if msg_box.clickedButton() == buttonY:
             QDialog.accept(self)
+            return True
+        else:
+            return False
