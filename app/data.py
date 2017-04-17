@@ -5,7 +5,7 @@ Tables
 """
 import sqlalchemy
 import psycopg2
-from sqlalchemy.orm import relationship, exc
+from sqlalchemy.orm import relationship, exc, column_property
 from sqlalchemy import (Table, Column, Integer, String, Boolean, ForeignKey,
                         UniqueConstraint, PrimaryKeyConstraint)
 from sqlalchemy.ext.declarative import declarative_base
@@ -27,24 +27,26 @@ class MultipleValuesFound(ValueError, exc.MultipleResultsFound):
     """
 
 class Employee(Base):
-	__tablename__   = 'employee'	
-	employee_id     = Column(Integer, primary_key=True)
-	name 			= Column(String, nullable=False)
-	surname 		= Column(String, nullable=False)
-	patronymic 		= Column(String)
-	email 			= Column(String)
-	unique_login 	= Column(String, unique=True, nullable=False)
-	position_id 	= Column(Integer, ForeignKey('position.position_id'))
-	shared_folder 	= Column(Boolean)
-	network_printer = Column(Boolean)
-	department_id 	= Column(Integer, ForeignKey('department.department_id'))
-	room_id 		= Column(Integer, ForeignKey('room.room_id'))
-	comments 		= Column(String)	
-	pc 			    = relationship('Pc', secondary='association', back_populates='employee')
-	position 	    = relationship('Position', back_populates='employee')
-	department      = relationship('Department', back_populates='employee')
-	room 		    = relationship('Room', back_populates='employee')
-	phone 		    = relationship('Phone', back_populates='employee', cascade='all, delete-orphan', passive_deletes=True)
+    __tablename__   = 'employee'	
+    employee_id     = Column(Integer, primary_key=True)
+    surname 		= Column(String, nullable=False)
+    name 			= Column(String, nullable=False)
+    patronymic 		= Column(String)
+    fullname        = column_property(surname + ' ' + name + ' ' + patronymic)
+    email 			= Column(String)
+    unique_login 	= Column(String, unique=True, nullable=False)
+    position_id 	= Column(Integer, ForeignKey('position.position_id'))
+    shared_folder 	= Column(Boolean)
+    network_printer = Column(Boolean)
+    department_id 	= Column(Integer, ForeignKey('department.department_id'))
+    room_id 		= Column(Integer, ForeignKey('room.room_id'))
+    comments 		= Column(String)
+    pc 			    = relationship('Pc', secondary='association', back_populates='employee')
+    position 	    = relationship('Position', back_populates='employee')
+    department      = relationship('Department', back_populates='employee')
+    room 		    = relationship('Room', back_populates='employee')
+    phone 		    = relationship('Phone', back_populates='employee', cascade='all, delete-orphan', passive_deletes=True)
+    email           = relationship('Email', back_populates='employee', cascade='all, delete-orphan', passive_deletes=True)
 
 class Position(Base):
 	__tablename__   = 'position'	
@@ -64,6 +66,13 @@ class Phone(Base):
     employee_id     = Column(Integer, ForeignKey('employee.employee_id', ondelete = 'CASCADE'))
     number          = Column(String, unique=True, nullable=False)
     employee        = relationship('Employee', back_populates='phone')
+
+class Email(Base):
+    __tablename__   = 'email'
+    email_id        = Column(Integer, primary_key=True)
+    employee_id     = Column(Integer, ForeignKey('employee.employee_id', ondelete = 'CASCADE'))
+    email           = Column(String, unique=True, nullable=False)
+    employee        = relationship('Employee', back_populates='email')
 
 class Room(Base):
     __tablename__   = 'room'

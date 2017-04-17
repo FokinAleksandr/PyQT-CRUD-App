@@ -30,7 +30,7 @@ class RegisterClient(Dialog):
      
     def init_ui(self):
         self.setFixedWidth(550)
-        self.setMaximumHeight(470)
+        #self.setMaximumHeight(470)
         self.setWindowModality(2)
         self.setWindowTitle('Регистрируем клиента')
         self.setWindowIcon(QIcon(r'pics\employee.png'))
@@ -62,7 +62,7 @@ class RegisterClient(Dialog):
         self.login_edit = QLineEdit()
         self.login_edit.setClearButtonEnabled(True)
         form_layout.addRow('Логин:<font color="red">*</font>', self.login_edit)
-
+        
         phone_edit = QLineEdit()
         phone_edit.setInputMask('+7(999)999-99-99;_');
         self.phone_edit = [phone_edit]
@@ -74,15 +74,20 @@ class RegisterClient(Dialog):
         phone_layout.addWidget(phone_edit)
         phone_layout.addWidget(self.add_phone_button)
         form_layout.addRow('Телефон:', phone_layout)
+        self.add_phone_button.clicked.connect(self.add_phone)
+        
+        email_edit = QLineEdit()
+        self.email_edit = [email_edit]
 
-        self.add_phone_button.clicked.connect(
-            partial(self.add_phone)
-            )
-
-        self.email_edit = QLineEdit()
-        self.email_edit.setClearButtonEnabled(True)
-        form_layout.addRow('E-MAIL:', self.email_edit)
-
+        self.add_email_button = QPushButton('+')
+        self.add_email_button.setFixedSize(self.add_email_button.sizeHint())
+        
+        email_layout = QHBoxLayout()
+        email_layout.addWidget(email_edit)
+        email_layout.addWidget(self.add_email_button)
+        form_layout.addRow('Email:', email_layout)
+        self.add_email_button.clicked.connect(self.add_email)
+        
         self.position_edit = QComboBox()
         self.position_edit.setEditable(True)   
         self.position_edit.addItems(
@@ -162,6 +167,20 @@ class RegisterClient(Dialog):
             self.add_phone_button.deleteLater()
             self.layout().insertRow(6, "Доп телефон:", phone_layout)
 
+    @QtCore.pyqtSlot()
+    def add_email(self):
+        email_edit = QLineEdit()
+        self.email_edit.append(email_edit)
+
+        email_layout = QHBoxLayout()
+        email_layout.addWidget(email_edit)
+        if len(self.email_edit) < 3:
+            email_layout.addWidget(self.add_email_button)
+            self.layout().insertRow(5 + len(self.phone_edit), "Доп email:", email_layout)
+        else:
+            self.add_email_button.deleteLater()
+            self.layout().insertRow(6 + len(self.phone_edit), "Доп email:", email_layout)
+
     @QtCore.pyqtSlot(str)
     def changed_item_in_address_combobox(self, index):
         self.block_edit.clear()
@@ -183,7 +202,7 @@ class RegisterClient(Dialog):
                 " -- обязательныe"
                 )
             return
-
+        
         self.phone_numbers = [
             lineEdit.text() for lineEdit
             in self.phone_edit
@@ -199,12 +218,48 @@ class RegisterClient(Dialog):
                 return
             else:
                 test_set.add(phone_number)
+        
+        for phone in self.phone_numbers:
+            stmt = self.session.query(data.Phone).\
+                filter(data.Phone.number==phone)
 
+            if self.session.query(stmt.exists()).scalar():
+                QMessageBox.warning(
+                    self, 'Предупреждение', 'Введенный телефон уже есть в базе'
+                    )
+                return
+        
+        self.emails = [
+            lineEdit.text() for lineEdit
+            in self.email_edit
+            if lineEdit.text()
+            ]
+
+        test_set = set()
+        for email in self.emails:
+            if email in test_set:
+                QMessageBox.warning(
+                    self, 'Предупреждение', 'email совпадают'
+                    )
+                return
+            else:
+                test_set.add(email)
+        
+        for email in self.emails:
+            stmt = self.session.query(data.Email).\
+                filter(data.Email.email==email)
+
+            if self.session.query(stmt.exists()).scalar():
+                QMessageBox.warning(
+                    self, 'Предупреждение', 'Введенный email уже есть в базе'
+                    )
+                return
+        
         stmt = self.session.query(data.Employee).\
             filter(data.Employee.unique_login==self.login_edit.text())
         if self.session.query(stmt.exists()).scalar():
             QMessageBox.warning(
-                self, 'Предупреждение', 'Нужен уникальный логин'
+                self, 'Предупреждение', 'Введенный логин уже есть в базе'
                 )
             return
 
@@ -218,7 +273,6 @@ class RegisterClient(Dialog):
             name            = self.name_edit.text(),
             patronymic      = self.patronymic_edit.text(),
             unique_login    = self.login_edit.text(),
-            email           = self.email_edit.text(),
             comments        = self.comments_edit.text(),
             shared_folder   = self.shared_folder_edit.isChecked(),
 	        network_printer = self.network_printer_edit.isChecked()
@@ -240,6 +294,9 @@ class RegisterClient(Dialog):
 
         for phone in self.phone_numbers:
             employee.phone.append(data.Phone(number=phone))
+
+        for email in self.emails:
+            employee.email.append(data.Email(email=email))
         
         block = self.session.query(data.Block).\
                     join(data.Address).\
