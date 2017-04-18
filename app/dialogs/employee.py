@@ -267,6 +267,7 @@ class RegisterClient(Dialog):
         if not self.accept():
             self.session.rollback()
 
+
     def process_data(self):
         employee = data.Employee(
             surname         = self.surname_edit.text(),
@@ -303,8 +304,16 @@ class RegisterClient(Dialog):
                     filter(data.Block.name==self.block_edit.currentText()).\
                     filter(data.Address.name==self.address_edit.currentText()).\
                     one()
-        room = data.Room(name=self.room_edit.text())
-        room.block = block
+
+        room = self.session.query(data.Room).\
+                    join(data.Block).\
+                    filter(data.Room.name==self.room_edit.text()).\
+                    first()
+
+        if not room:
+            room = data.Room(name=self.room_edit.text())
+            room.block = block
+      
         employee.room = room
 
         for action in self.toolmenu.actions():
