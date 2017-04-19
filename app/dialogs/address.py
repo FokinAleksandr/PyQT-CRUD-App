@@ -34,11 +34,11 @@ class ConfigureAddresses(Dialog):
         self.blocks_list = QListWidget()
         self.blocks_list.itemDoubleClicked[QListWidgetItem].connect(
             self.edit_block_via_double_click
-        )
+            )
         self.addresses_list.itemClicked.connect(self.fill_blocks)
         self.addresses_list.itemDoubleClicked[QListWidgetItem].connect(
             self.edit_address_via_double_click
-        )
+            )
 
         QVBoxLayout(self)
         lists_layout = QHBoxLayout()
@@ -51,20 +51,22 @@ class ConfigureAddresses(Dialog):
         accept_data_button.setFixedSize(accept_data_button.sizeHint())
         self.layout().addWidget(
             accept_data_button, alignment=(Qt.AlignRight | Qt.AlignVCenter)
-        )
+            )
 
         self.fill_addresses()
 
     def fill_addresses(self):
         self.addresses_list.clear()
-        for address in self.session.query(data.Address).all():
+        for address in self.session.query(data.Address).\
+                            order_by(data.Address.name).\
+                            all():
             address_widget = AddressWidget(address)
             address_widget.delete_button.clicked.connect(
                 partial(self.delete_address, address=address)
-            )
+                )
             address_widget.view_button.clicked.connect(
                 partial(self.edit_address, address=address)
-            )
+                )
             address_item = QListWidgetItem()
             address_item.setSizeHint(QSize(250, 75))
             self.addresses_list.addItem(address_item)
@@ -80,12 +82,12 @@ class ConfigureAddresses(Dialog):
     def add_address(self):
         text, ok = QInputDialog.getText(
             self, 'Добавление нового адреса', 'Адрес:'
-        )
+            )
         if ok:
             if not text:
                 QMessageBox.warning(
-                        self, 'Предупреждение', 'Поле не может быть пустым!'
-                )
+                    self, 'Предупреждение', 'Поле не может быть пустым!'
+                    )
                 return
             try:
                 self.session.query(data.Address).\
@@ -97,7 +99,7 @@ class ConfigureAddresses(Dialog):
             else:
                 QMessageBox.warning(
                     self, 'Предупреждение', 'Адрес уже существует!'
-                )
+                    )
 
     @QtCore.pyqtSlot(QListWidgetItem)
     def edit_address_via_double_click(self, item):
@@ -108,12 +110,12 @@ class ConfigureAddresses(Dialog):
     def edit_address(self, address):
         text, ok = QInputDialog.getText(
             self, 'Изменение адреса', 'Новое название:'
-        )
+            )
         if ok:
             if not text:
                 QMessageBox.warning(
-                        self, 'Предупреждение', 'Поле не может быть пустым!'
-                )
+                    self, 'Предупреждение', 'Поле не может быть пустым!'
+                    )
                 return
             try:
                 self.session.query(data.Address).\
@@ -124,7 +126,7 @@ class ConfigureAddresses(Dialog):
             else:
                 QMessageBox.warning(
                     self, 'Предупреждение', 'Адрес уже существует!'
-                )
+                    )
 
     @QtCore.pyqtSlot(data.Address)
     def delete_address(self, address):
@@ -139,17 +141,18 @@ class ConfigureAddresses(Dialog):
     def fill_blocks(self):
         self.blocks_list.clear()
         address_widget = self.addresses_list.itemWidget(self.addresses_list.currentItem())
-        blocks = self.session.query(data.Block).\
-            with_parent(address_widget.address).all()
-        for block in blocks:
+        for block in self.session.query(data.Block).\
+                with_parent(address_widget.address).\
+                order_by(data.Block.name).\
+                all():
             block_item = QListWidgetItem() 
             block_widget = BlockWidget(block)
             block_widget.delete_button.clicked.connect(
                 partial(self.delete_block, block=block)
-            )
+                )
             block_widget.view_button.clicked.connect(
                 partial(self.edit_block, block=block)
-            )
+                )
             block_item.setSizeHint(QSize(250, 75))
             self.blocks_list.addItem(block_item)
             self.blocks_list.setItemWidget(block_item, block_widget)
@@ -158,7 +161,7 @@ class ConfigureAddresses(Dialog):
         add_button = QPushButton("Добавить корпус")
         add_button.clicked.connect(
             partial(self.add_block, address=address_widget.address)
-        )
+            )
         add_item.setSizeHint(QSize(250, 75))
         self.blocks_list.addItem(add_item)
         self.blocks_list.setItemWidget(add_item, add_button)
@@ -167,12 +170,12 @@ class ConfigureAddresses(Dialog):
     def add_block(self, address):
         text, ok = QInputDialog.getText(
             self, 'Добавление нового корпуса', 'Корпус:'
-        )
+            )
         if ok:
             if not text:
                 QMessageBox.warning(
-                        self, 'Предупреждение', 'Поле не может быть пустым!'
-                )
+                    self, 'Предупреждение', 'Поле не может быть пустым!'
+                    )
                 return
             try:
                 self.session.query(data.Block).\
@@ -186,7 +189,7 @@ class ConfigureAddresses(Dialog):
             else:
                 QMessageBox.warning(
                     self, 'Предупреждение', 'Корпус уже существует!'
-                )
+                    )
 
     @QtCore.pyqtSlot(QListWidgetItem)
     def edit_block_via_double_click(self, item):
@@ -197,12 +200,12 @@ class ConfigureAddresses(Dialog):
     def edit_block(self, block):
         text, ok = QInputDialog.getText(
             self, 'Изменение корпуса', 'Новое название:'
-        )
+            )
         if ok:
             if not text:
                 QMessageBox.warning(
-                        self, 'Предупреждение', 'Поле не может быть пустым!'
-                )
+                    self, 'Предупреждение', 'Поле не может быть пустым!'
+                    )
                 return
             try:
                 self.session.query(data.Block).\
@@ -214,7 +217,7 @@ class ConfigureAddresses(Dialog):
             else:
                 QMessageBox.warning(
                     self, 'Предупреждение', 'Корпус уже существует!'
-                )
+                    )
 
     @QtCore.pyqtSlot(data.Block)
     def delete_block(self, block):
@@ -230,11 +233,11 @@ class AddressWidget(QWidget):
     def __init__(self, address):
         QWidget.__init__(self)
         self.address = address
-        self.icon = QLabel()
+        icon = QLabel()
         pixmap = QPixmap(r'pics\address.png')
         pixmap = pixmap.scaledToWidth(40)
-        self.icon.setPixmap(pixmap)
-        self.name = QLabel("<h3>{}<h3>".format(address.name))
+        icon.setPixmap(pixmap)
+        name = QLabel("<h3>{}<h3>".format(address.name))
         self.view_button = QPushButton("Изменить")
         self.view_button.setFixedWidth(80)
         self.delete_button = QPushButton("Удалить")
@@ -245,8 +248,8 @@ class AddressWidget(QWidget):
         buttons_layout.addWidget(self.delete_button)
 
         layout = QHBoxLayout(self)
-        layout.addWidget(self.icon)
-        layout.addWidget(self.name)
+        layout.addWidget(icon)
+        layout.addWidget(name)
         layout.addStretch()
         layout.addLayout(buttons_layout)
         
@@ -254,11 +257,11 @@ class BlockWidget(QWidget):
     def __init__(self, block):
         QWidget.__init__(self)
         self.block = block
-        self.icon = QLabel()
+        icon = QLabel()
         pixmap = QPixmap(r'pics\block.png')
         pixmap = pixmap.scaledToWidth(40)
-        self.icon.setPixmap(pixmap)
-        self.name = QLabel("<h3>{}<h3>".format(block.name))
+        icon.setPixmap(pixmap)
+        name = QLabel("<h3>{}<h3>".format(block.name))
         self.view_button = QPushButton("Изменить")
         self.view_button.setFixedWidth(80)
         self.delete_button = QPushButton("Удалить")
@@ -269,8 +272,8 @@ class BlockWidget(QWidget):
         buttons_layout.addWidget(self.delete_button)
 
         layout = QHBoxLayout(self)
-        layout.addWidget(self.icon)
-        layout.addWidget(self.name)
+        layout.addWidget(icon)
+        layout.addWidget(name)
         layout.addStretch()
         layout.addLayout(buttons_layout)
         

@@ -30,7 +30,7 @@ class RegisterClient(Dialog):
      
     def init_ui(self):
         self.setFixedWidth(550)
-        #self.setMaximumHeight(470)
+        self.setMaximumHeight(470)
         self.setWindowModality(2)
         self.setWindowTitle('Регистрируем клиента')
         self.setWindowIcon(QIcon(r'pics\employee.png'))
