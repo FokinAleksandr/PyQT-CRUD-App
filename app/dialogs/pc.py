@@ -172,7 +172,6 @@ class RegisterPC(Dialog):
         if not self.accept():
             self.session.rollback()
 
-
     def process_data(self):
         pcname = data.PcName(
             name = self.pc_name_edit.text()

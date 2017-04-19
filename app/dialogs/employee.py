@@ -49,20 +49,24 @@ class RegisterClient(Dialog):
 
         self.surname_edit = QLineEdit()
         self.surname_edit.setClearButtonEnabled(True)
-        form_layout.addRow('Фамилия:<font color="red">*</font>', self.surname_edit)
-
+        form_layout.addRow(
+            'Фамилия:<font color="red">*</font>', self.surname_edit
+            )
         self.name_edit = QLineEdit()
         self.name_edit.setClearButtonEnabled(True)
-        form_layout.addRow('Имя:<font color="red">*</font>', self.name_edit)
-
+        form_layout.addRow(
+            'Имя:<font color="red">*</font>', self.name_edit
+            )
         self.patronymic_edit = QLineEdit()
         self.patronymic_edit.setClearButtonEnabled(True)
-        form_layout.addRow('Отчество:', self.patronymic_edit)
-
+        form_layout.addRow(
+            'Отчество:', self.patronymic_edit
+            )
         self.login_edit = QLineEdit()
         self.login_edit.setClearButtonEnabled(True)
-        form_layout.addRow('Логин:<font color="red">*</font>', self.login_edit)
-        
+        form_layout.addRow(
+            'Логин:<font color="red">*</font>', self.login_edit
+            )  
         phone_edit = QLineEdit()
         phone_edit.setInputMask('+7(999)999-99-99;_');
         self.phone_edit = [phone_edit]
@@ -73,7 +77,9 @@ class RegisterClient(Dialog):
         phone_layout = QHBoxLayout()
         phone_layout.addWidget(phone_edit)
         phone_layout.addWidget(self.add_phone_button)
-        form_layout.addRow('Телефон:', phone_layout)
+        form_layout.addRow(
+            'Телефон:', phone_layout
+            )
         self.add_phone_button.clicked.connect(self.add_phone)
         
         email_edit = QLineEdit()
@@ -85,7 +91,9 @@ class RegisterClient(Dialog):
         email_layout = QHBoxLayout()
         email_layout.addWidget(email_edit)
         email_layout.addWidget(self.add_email_button)
-        form_layout.addRow('Email:', email_layout)
+        form_layout.addRow(
+            'Email:', email_layout
+            )
         self.add_email_button.clicked.connect(self.add_email)
         
         self.position_edit = QComboBox()
@@ -94,7 +102,9 @@ class RegisterClient(Dialog):
             self.session.query(data.Position.name).values()
             )
         self.position_edit.setCurrentText('')
-        form_layout.addRow('Должность:', self.position_edit)
+        form_layout.addRow(
+            'Должность:', self.position_edit
+            )
 
         self.department_edit = QComboBox()
         self.department_edit.setEditable(True)
@@ -102,7 +112,9 @@ class RegisterClient(Dialog):
             self.session.query(data.Department.name).values()
             )
         self.department_edit.setCurrentText('')
-        form_layout.addRow('Отдел:', self.department_edit)
+        form_layout.addRow(
+            'Отдел:', self.department_edit
+            )
 
         self.address_edit = QComboBox()
         self.address_edit.addItems(
@@ -111,21 +123,25 @@ class RegisterClient(Dialog):
         self.address_edit.currentIndexChanged[str].connect(
             self.changed_item_in_address_combobox
             )
-        form_layout.addRow('Адрес:<font color="red">*</font>', self.address_edit)
+        form_layout.addRow(
+            'Адрес:<font color="red">*</font>', self.address_edit
+            )
 
         self.block_edit = QComboBox()
-        form_layout.addRow('Корпус:<font color="red">*</font>', self.block_edit)
+        form_layout.addRow(
+            'Корпус:<font color="red">*</font>', self.block_edit
+            )
         self.block_edit.addItems(
             self.session.query(data.Block.name).\
                 join(data.Address).\
                 filter(data.Address.name==self.address_edit.currentText()).\
                 values()
             )
-
         self.room_edit = QLineEdit()
         self.room_edit.setClearButtonEnabled(True)
-        form_layout.addRow('Комната:', self.room_edit)
-
+        form_layout.addRow(
+            'Комната:<font color="red">*</font>', self.room_edit
+            )
         self.comments_edit = QLineEdit()
         self.comments_edit.setClearButtonEnabled(True)
         form_layout.addRow('Прочее:', self.comments_edit)
@@ -176,10 +192,14 @@ class RegisterClient(Dialog):
         email_layout.addWidget(email_edit)
         if len(self.email_edit) < 3:
             email_layout.addWidget(self.add_email_button)
-            self.layout().insertRow(5 + len(self.phone_edit), "Доп email:", email_layout)
+            self.layout().insertRow(
+                5 + len(self.phone_edit), "Доп email:", email_layout
+                )
         else:
             self.add_email_button.deleteLater()
-            self.layout().insertRow(6 + len(self.phone_edit), "Доп email:", email_layout)
+            self.layout().insertRow(
+                6 + len(self.phone_edit), "Доп email:", email_layout
+                )
 
     @QtCore.pyqtSlot(str)
     def changed_item_in_address_combobox(self, index):

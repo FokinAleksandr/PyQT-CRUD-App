@@ -38,9 +38,11 @@ class MainWindow(QMainWindow):
         address_action.triggered.connect(self.add_address)
         refresh_action = QAction(QIcon(r'pics\refresh.png'), 'Refresh', self)
         refresh_action.triggered.connect(self.refresh)
+        excel_action = QAction(QIcon(r'pics\excel.png'), 'Excel', self)
+        excel_action.triggered.connect(self.excel)
         toolbar = self.addToolBar("Toolbar")
         toolbar.addActions(
-            [employee_action, pc_action, address_action, refresh_action]
+            [employee_action, pc_action, address_action, refresh_action, excel_action]
             )
 
     def display_data(self):
@@ -102,6 +104,9 @@ class MainWindow(QMainWindow):
     def refresh(self):
         self.display_data()
 
+    def excel(self):
+        print("Скоро")
+
     def set_and_center_the_window(self, x, y):
         self.resize(1220, 768)
         frame_geometry = self.frameGeometry()
@@ -121,12 +126,12 @@ class EmployeeTable(QWidget):
         personal_info_layout = QVBoxLayout()
 
         self.fio_filter = QLineEdit()
-        self.fio_filter.setFixedWidth(200)
+        self.fio_filter.setFixedWidth(230)
         self.fio_filter.setPlaceholderText('ФИО')
         personal_info_layout.addWidget(self.fio_filter)
 
         self.login_filter = QLineEdit()
-        self.login_filter.setFixedWidth(200)
+        self.login_filter.setFixedWidth(230)
         self.login_filter.setPlaceholderText('Логин')
         personal_info_layout.addWidget(self.login_filter)
 
@@ -137,31 +142,17 @@ class EmployeeTable(QWidget):
 
         filters_layout.addLayout(personal_info_layout)
         #########################################################
-        employee_info_layout = QVBoxLayout()
-
-        self.position_filter = QComboBox()
-        self.position_filter.addItems(
-            self.session.query(data.Position.name).values()
-            )
-        employee_info_layout.addWidget(self.position_filter)
-
-        self.department_filter = QComboBox()
-        self.department_filter.addItems(
-            self.session.query(data.Department.name).values()
-            )
-        employee_info_layout.addWidget(self.department_filter)
-
-        filters_layout.addLayout(employee_info_layout)
-        #########################################################
-        address_info_layout = QVBoxLayout()
+        address_info_layout = QHBoxLayout()
 
         self.address_filter = QComboBox()
+        self.address_filter.addItem('Все')
         self.address_filter.addItems(
             self.session.query(data.Address.name).values()
             )
         address_info_layout.addWidget(self.address_filter)
 
         self.block_filter = QComboBox()
+        self.block_filter.addItem('Все')
         self.block_filter.addItems(
             self.session.query(data.Block.name).\
                 distinct(data.Block.name).\
@@ -173,13 +164,31 @@ class EmployeeTable(QWidget):
         self.room_filter.setFixedWidth(50)
         self.room_filter.setPlaceholderText('Комната')
         address_info_layout.addWidget(self.room_filter)
+        #########################################################
+        employee_info_layout = QVBoxLayout()
 
-        filters_layout.addLayout(address_info_layout)
+        self.position_filter = QComboBox()
+        self.position_filter.setEditable(True)
+        self.position_filter.addItems(
+            self.session.query(data.Position.name).values()
+            )
+        employee_info_layout.addWidget(self.position_filter)
+
+        self.department_filter = QComboBox()
+        self.department_filter.setEditable(True)
+        self.department_filter.addItems(
+            self.session.query(data.Department.name).values()
+            )
+        employee_info_layout.addWidget(self.department_filter)
+        employee_info_layout.addLayout(address_info_layout)
+
+        filters_layout.addLayout(employee_info_layout)
         #########################################################
         find_button = QPushButton('Найти')
-        find_button.setFixedSize(find_button.sizeHint())
+        find_button.setFixedSize(80, 80)
         find_button.clicked.connect(self.build_table)
         filters_layout.addWidget(find_button)
+        filters_layout.addStretch()
 
         self.main_table = QTableWidget()
         self.main_table.setSelectionMode(QAbstractItemView.NoSelection)
@@ -203,18 +212,28 @@ class EmployeeTable(QWidget):
 
     def build_table(self):
         self.main_table.setRowCount(0)
-
         employees = self.session.query(data.Employee).\
-                        join(data.Position).\
-                        join(data.Department).\
-                        join(data.Phone).\
-                        join(data.Room).\
-                        join(data.Block).\
-                        join(data.Address).\
-                        filter(data.Employee.fullname.ilike('%' + self.fio_filter.text() + '%')).\
-                        filter(data.Employee.unique_login.ilike('%' + self.login_filter.text() + '%')).\
-                        all()
+            filter(data.Employee.fullname.ilike('%' + self.fio_filter.text() + '%')).\
+            filter(data.Employee.unique_login.ilike('%' + self.login_filter.text() + '%'))
 
+        if self.phone_filter.text():
+            employees = employees.join(data.Phone).\
+                filter(data.Phone.number.like('%' + self.phone_filter.text() + '%'))
+        if self.department_filter.currentText():
+            employees = employees.join(data.Department).\
+                filter(data.Department.name.ilike('%' + self.department_filter.currentText() + '%'))
+        if self.position_filter.currentText():
+            employees = employees.join(data.Position).\
+                filter(data.Position.name.ilike('%' + self.position_filter.currentText() + '%'))
+        if self.address_filter.currentText() != 'Все':
+            employees = employees.join(data.Room).join(data.Block).join(data.Address).\
+                filter(data.Address.name==self.address_filter.currentText())
+        if self.block_filter.currentText() != 'Все':
+            employees = employees.join(data.Room).join(data.Block).\
+                filter(data.Block.name==self.block_filter.currentText())
+        if self.room_filter.text():
+            employees = employees.join(data.Room).\
+                filter(data.Room.name.like('%' + self.room_filter.text() + '%'))
 
         for row, employee in enumerate(employees):
             self.main_table.insertRow(row)
@@ -245,3 +264,5 @@ class PcTable(QWidget):
 
     def edit_pc(self):
         pass
+
+ 
