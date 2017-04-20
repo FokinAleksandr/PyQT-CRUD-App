@@ -152,6 +152,12 @@ class EmployeeTable(QWidget):
         self.phone_filter.setPlaceholderText('Телефон')
         personal_info_layout.addWidget(self.phone_filter)
 
+        personal_info_labels_layout = QVBoxLayout()
+        personal_info_labels_layout.addWidget(QLabel('<h4>ФИО</h4>'))
+        personal_info_labels_layout.addWidget(QLabel('<h4>Логин</h4>'))
+        personal_info_labels_layout.addWidget(QLabel('<h4>Телефон</h4>'))
+
+        filters_layout.addLayout(personal_info_labels_layout)
         filters_layout.addLayout(personal_info_layout)
         #########################################################
         address_info_layout = QHBoxLayout()
@@ -181,19 +187,26 @@ class EmployeeTable(QWidget):
 
         self.position_filter = QComboBox()
         self.position_filter.setEditable(True)
+        self.position_filter.addItem('')
         self.position_filter.addItems(
-            self.session.query(data.Position.name).values()
+            row.name for row in self.session.query(data.Position) if row.name
             )
         employee_info_layout.addWidget(self.position_filter)
 
         self.department_filter = QComboBox()
         self.department_filter.setEditable(True)
+        self.department_filter.addItem('')
         self.department_filter.addItems(
-            self.session.query(data.Department.name).values()
+            row.name for row in self.session.query(data.Department) if row.name
             )
         employee_info_layout.addWidget(self.department_filter)
         employee_info_layout.addLayout(address_info_layout)
 
+        employee_info_labels_layout = QVBoxLayout()
+        employee_info_labels_layout.addWidget(QLabel('<h4>Должность</h4>'))
+        employee_info_labels_layout.addWidget(QLabel('<h4>Отдел</h4>'))
+        employee_info_labels_layout.addWidget(QLabel('<h4>Место Работы</h4>'))
+        filters_layout.addLayout(employee_info_labels_layout)
         filters_layout.addLayout(employee_info_layout)
         #########################################################
         find_button = QPushButton('Найти')
@@ -225,28 +238,27 @@ class EmployeeTable(QWidget):
     def build_table(self):
         self.main_table.setRowCount(0)
         employees = self.session.query(data.Employee).\
+            join(data.Room).\
+            join(data.Block).\
+            join(data.Address).\
+            outerjoin(data.Phone).\
+            outerjoin(data.Department).\
+            outerjoin(data.Position).\
             filter(data.Employee.fullname.ilike('%' + self.fio_filter.text() + '%')).\
             filter(data.Employee.unique_login.ilike('%' + self.login_filter.text() + '%'))
 
         if self.phone_filter.text():
-            employees = employees.join(data.Phone).\
-                filter(data.Phone.number.like('%' + self.phone_filter.text() + '%'))
+            employees = employees.filter(data.Phone.number.like('%' + self.phone_filter.text() + '%'))
         if self.department_filter.currentText():
-            employees = employees.join(data.Department).\
-                filter(data.Department.name.ilike('%' + self.department_filter.currentText() + '%'))
+            employees = employees.filter(data.Department.name.ilike('%' + self.department_filter.currentText() + '%'))
         if self.position_filter.currentText():
-            employees = employees.join(data.Position).\
-                filter(data.Position.name.ilike('%' + self.position_filter.currentText() + '%'))
-
+            employees = employees.filter(data.Position.name.ilike('%' + self.position_filter.currentText() + '%'))
         if self.address_filter.currentText() != 'Все':
-            employees = employees.join(data.Room).join(data.Block).join(data.Address).\
-                filter(data.Address.name==self.address_filter.currentText())
+            employees = employees.filter(data.Address.name==self.address_filter.currentText())
         if self.block_filter.currentText() != 'Все':
-            employees = employees.join(data.Room).join(data.Block).\
-                filter(data.Block.name==self.block_filter.currentText())
+            employees = employees.filter(data.Block.name==self.block_filter.currentText())
         if self.room_filter.text():
-            employees = employees.join(data.Room).\
-                filter(data.Room.name.like('%' + self.room_filter.text() + '%'))
+            employees = employees.filter(data.Room.name.like('%' + self.room_filter.text() + '%'))
 
         for row, employee in enumerate(employees):
             self.main_table.insertRow(row)
