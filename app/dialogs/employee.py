@@ -223,6 +223,14 @@ class RegisterClient(Dialog):
                 )
             return
         
+        if not self.address_edit.currentText()\
+            or not self.block_edit.currentText():
+            QMessageBox.warning(
+                self,'Предупреждение',
+                "Предварительно необходимо внести добавить хотя бы один адрес"
+                )
+            return
+
         self.phone_numbers = [
             lineEdit.text() for lineEdit
             in self.phone_edit

@@ -47,7 +47,7 @@ class MainWindow(QMainWindow):
 
     def display_data(self):
         employee_table = EmployeeTable()
-        pc_table = PcTable()
+        pc_table = QWidget()
         tab_widget = QTabWidget()
         tab_widget.addTab(employee_table, "Сотрудники")
         tab_widget.addTab(pc_table, "Компьютеры")
@@ -281,13 +281,4 @@ class EmployeeTable(QWidget):
     def edit_employee(self, employee):
         print("Пока не готово")
             
-
-class PcTable(QWidget):
-    def __init__(self, parent=None):
-        QWidget.__init__(self, parent)
-        session = data.Session()
-
-    def edit_pc(self):
-        pass
-
  

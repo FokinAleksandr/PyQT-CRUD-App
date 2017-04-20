@@ -13,6 +13,7 @@ from PyQt5.QtWidgets import (QWidget, QMessageBox, QPushButton,
 from PyQt5.QtGui import (QIcon, QFont)
 from PyQt5.QtCore import Qt
 from PyQt5 import QtCore
+from PyQt5.Qt import QRegExpValidator, QRegExp
 
 
 
@@ -44,19 +45,21 @@ class RegisterPC(Dialog):
         form_layout = QFormLayout(self)
 
         self.pc_name_edit = QLineEdit()
+        self.pc_name_edit.setValidator(QRegExpValidator(QRegExp("[^А-ЯA-Z ]+")))
         self.pc_name_edit.setClearButtonEnabled(True)
         form_layout.addRow(
             'Имя компьютера:<font color="red">*</font>', self.pc_name_edit
             )
 
         self.mac_edit = QLineEdit()
+        self.mac_edit.setValidator(QRegExpValidator(QRegExp("[A-F-0-9]+")))
         self.mac_edit.setClearButtonEnabled(True)
         form_layout.addRow(
             'MAC-адрес:<font color="red">*</font>', self.mac_edit
             )
 
         self.power_socket_edit = QComboBox()
-        self.power_socket_edit.setEditable(True) 
+        self.power_socket_edit.setEditable(True)
         self.session.query(data.PowerSocket.name).values()
         self.power_socket_edit.addItems(
             self.session.query(data.PowerSocket.name).values()
@@ -66,6 +69,7 @@ class RegisterPC(Dialog):
 
         self.connection_type_edit = QComboBox()
         self.connection_type_edit.setEditable(True)
+        self.connection_type_edit.setValidator(QRegExpValidator(QRegExp("[^А-ЯA-Z]+")))    
         self.connection_type_edit.addItems(
             self.session.query(data.ConnectionType.name).values()
             )
@@ -86,6 +90,7 @@ class RegisterPC(Dialog):
 
         self.windows_os_edit = QComboBox()
         self.windows_os_edit.setEditable(True)
+        self.windows_os_edit.setValidator(QRegExpValidator(QRegExp("[^A-Z]+")))
         self.windows_os_edit.addItems(
             self.session.query(data.Windows.name).values()
             )
@@ -94,6 +99,7 @@ class RegisterPC(Dialog):
 
         self.ms_office_edit = QComboBox()
         self.ms_office_edit.setEditable(True)
+        self.ms_office_edit.setValidator(QRegExpValidator(QRegExp("[^A-Z]+")))       
         self.ms_office_edit.addItems(
             self.session.query(data.Office.name).values()
             )
@@ -102,6 +108,7 @@ class RegisterPC(Dialog):
 
         self.antivirus_edit = QComboBox()
         self.antivirus_edit.setEditable(True)
+        self.antivirus_edit.setValidator(QRegExpValidator(QRegExp("[^A-Z]+")))   
         self.antivirus_edit.addItems(
             self.session.query(data.Antivirus.name).values()
             )
