@@ -6,7 +6,7 @@
 import sys
 import os
 from app.dialogs import employee, pc, address
-from app import data
+from app import data, excel
 from app.functions import get_or_create
 from functools import partial
 from sqlalchemy import exc, distinct
@@ -95,7 +95,9 @@ class MainWindow(QMainWindow):
         except exc.IntegrityError as errmsg:
             print(errmsg)
             session.rollback()
-            QMessageBox.critical(self, 'Критическая ошибка', 'Ошибка базы данных. Попробуйте еще раз.')
+            QMessageBox.critical(
+                self, 'Критическая ошибка', 'Ошибка базы данных. Попробуйте еще раз.'
+                )
         else:
             print('Все успешно')
         finally:
@@ -105,7 +107,18 @@ class MainWindow(QMainWindow):
         self.display_data()
 
     def excel(self):
-        print("Скоро")
+        session = data.Session()
+        try:
+            excel.run(session)
+        except PermissionError:
+            QMessageBox.warning(
+                self, 'Предупреждение', 'Закройте файл Employees.xlsx в\n{}\nи попробуйте еще раз'.format(os.getcwd())
+                )
+        else:
+            QMessageBox.information(
+                self, 'Уведомление', 'Файл Employees.xlsx сгенерирован в папку\n{}'.format(os.getcwd())
+                )
+        session.close
 
     def set_and_center_the_window(self, x, y):
         self.resize(1220, 768)
@@ -121,7 +134,6 @@ class EmployeeTable(QWidget):
         QVBoxLayout(self)
 
         filters_layout = QHBoxLayout()
-       
         #########################################################
         personal_info_layout = QVBoxLayout()
 
@@ -225,6 +237,7 @@ class EmployeeTable(QWidget):
         if self.position_filter.currentText():
             employees = employees.join(data.Position).\
                 filter(data.Position.name.ilike('%' + self.position_filter.currentText() + '%'))
+
         if self.address_filter.currentText() != 'Все':
             employees = employees.join(data.Room).join(data.Block).join(data.Address).\
                 filter(data.Address.name==self.address_filter.currentText())
