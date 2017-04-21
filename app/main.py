@@ -17,7 +17,6 @@ from PyQt5.QtCore import *
 from PyQt5.Qt import *
 from sqlalchemy.orm import class_mapper, defer
 
-
 class MainWindow(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)

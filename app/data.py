@@ -171,6 +171,6 @@ class Office(Base):
 
 class Antivirus(Base):
     __tablename__   = 'antivirus'
-    antivirus_id = Column(Integer, primary_key=True)
+    antivirus_id    = Column(Integer, primary_key=True)
     name            = Column(String, unique=True, nullable=False)
     pc              = relationship('Pc', back_populates='antivirus')

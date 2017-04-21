@@ -3,12 +3,18 @@ from app import data
 
 
 def run(session):
-    # Create a workbook and add a worksheet.
+
     workbook = xlsxwriter.Workbook('Employees.xlsx')
 
     for block in session.query(data.Block):
         worksheet = workbook.add_worksheet(block.address.name + '-' + block.name)
+        worksheet.autofilter('A1:AC1')
+        worksheet.set_column('B1:AC1', 20)
+        worksheet.set_column('G1:G1', 30)
+        worksheet.set_default_row(30)
+        worksheet.set_tab_color('green')
         bold = workbook.add_format({'bold': True})
+        cell_format = workbook.add_format({'text_wrap': True})
         worksheet.write('A1', '№ комнаты', bold)
         worksheet.write('B1', 'ФИО сотрудника', bold)
         worksheet.write('C1', 'Уникальный логин', bold)
@@ -16,45 +22,86 @@ def run(session):
         worksheet.write('E1', 'Должность', bold)
         worksheet.write('F1', 'Отдел', bold)
         worksheet.write('G1', 'E-Mail', bold)
-        worksheet.write('H1', 'Доп информация о сотруднке', bold)
-        worksheet.write('I1', 'Домен', bold)
-        worksheet.write('J1', 'Имя компьютера', bold)
-        worksheet.write('K1', 'MAC-адрес', bold)
-        worksheet.write('L1', 'Серверные приложения', bold)
-        worksheet.write('M1', '№ розетки', bold)
-        worksheet.write('N1', 'Windows OS', bold)
-        worksheet.write('O1', 'ключ Windows OS', bold)
-        worksheet.write('P1', 'MS Office', bold)
-        worksheet.write('Q1', 'ключ MS Office', bold)
-        worksheet.write('R1', 'Клиент электронной почты', bold)
-        worksheet.write('S1', 'Как подключен', bold)
-        worksheet.write('T1', 'Агент KES', bold)
-        worksheet.write('U1', 'Антивирус', bold)
-        worksheet.write('V1', 'Консультант', bold)
-        worksheet.write('W1', 'Гарант', bold)
-        worksheet.write('X1', '1С', bold)
-        worksheet.write('Y1', 'КДС', bold)
-        worksheet.write('Z1', 'Доп информация о компьютере', bold)
-        worksheet.write('AA1', 'Общие папки', bold)
-        worksheet.write('AB1', 'Сетевой принтер', bold)
-
-        row = 1
-        col = 0
-
-        employees = session.query(data.Employee).\
+        worksheet.write('H1', 'Общие папки', bold)
+        worksheet.write('I1', 'Сетевой принтер', bold)
+        worksheet.write('J1', 'Доп информация о сотруднке', bold)
+        worksheet.write('K1', 'Номер компьютера', bold)
+        worksheet.write('L1', 'Домен', bold)
+        worksheet.write('M1', 'Имя компьютера', bold)
+        worksheet.write('N1', 'MAC-адрес', bold)
+        worksheet.write('O1', 'Серверные приложения', bold)
+        worksheet.write('P1', '№ розетки', bold)
+        worksheet.write('Q1', 'Windows OS', bold)
+        worksheet.write('R1', 'Ключ Windows OS', bold)
+        worksheet.write('S1', 'MS Office', bold)
+        worksheet.write('T1', 'Ключ MS Office', bold)
+        worksheet.write('U1', 'Клиент электронной почты', bold)
+        worksheet.write('V1', 'Как подключен', bold)
+        worksheet.write('W1', 'Агент KES', bold)
+        worksheet.write('X1', 'Антивирус', bold)
+        worksheet.write('Y1', 'Консультант', bold)
+        worksheet.write('Z1', 'Гарант', bold)
+        worksheet.write('AA1', '1С', bold)
+        worksheet.write('AB1', 'КДС', bold)
+        worksheet.write('AC1', 'Доп информация о компьютере', bold)
+        run.row = 1
+        for employee in session.query(data.Employee).\
                             join(data.Room).\
                             join(data.Block).\
-                            filter(data.Block.name==block.name)
-        for employee in employees:
-            worksheet.write(row, 0, employee.room.name)
-            worksheet.write(row, 1, employee.fullname)
-            worksheet.write(row, 2, employee.unique_login)
-            worksheet.write(row, 3, '\n'.join(phone.number for phone in employee.phone))
-            worksheet.write(row, 4, employee.position.name)
-            worksheet.write(row, 5, employee.department.name)
-            worksheet.write(row, 6, '\n'.join(email.email for email in employee.email))
-            worksheet.write(row, 7, employee.comments)
-            worksheet.set_column(0, 7, 30)
-            row += 1
+                            filter(data.Block.name==block.name):
+            worksheet.set_row(run.row, 50)
+            if len(employee.pc) > 1:
+                worksheet.merge_range(run.row, 0, run.row + len(employee.pc) - 1, 0,
+                                      employee.room.name)
+                worksheet.merge_range(run.row, 1, run.row + len(employee.pc) - 1, 1,
+                                      employee.fullname, cell_format)
+                worksheet.merge_range(run.row, 2, run.row + len(employee.pc) - 1, 2,
+                                      employee.unique_login)
+                worksheet.merge_range(run.row, 3, run.row + len(employee.pc) - 1, 3,
+                                      '\n'.join(phone.number for phone in employee.phone), cell_format)
+                worksheet.merge_range(run.row, 4, run.row + len(employee.pc) - 1, 4,
+                                      employee.position.name, cell_format)
+                worksheet.merge_range(run.row, 5, run.row + len(employee.pc) - 1, 5,
+                                      employee.department.name, cell_format)
+                worksheet.merge_range(run.row, 6, run.row + len(employee.pc) - 1, 6,
+                                      '\n'.join(email.email for email in employee.email), cell_format)
+                worksheet.merge_range(run.row, 7, run.row + len(employee.pc) - 1, 7,
+                                      'Есть' if employee.shared_folder else 'Нет')
+                worksheet.merge_range(run.row, 8, run.row + len(employee.pc) - 1, 8,
+                                      'Есть' if employee.network_printer else 'Нет')
+                worksheet.merge_range(run.row, 9, run.row + len(employee.pc) - 1, 9,
+                                      employee.comments)
+            else:
+                worksheet.write(run.row, 0, employee.room.name)
+                worksheet.write(run.row, 1, employee.fullname, cell_format)
+                worksheet.write(run.row, 2, employee.unique_login)
+                worksheet.write(run.row, 3, '\n'.join(phone.number for phone in employee.phone), cell_format)
+                worksheet.write(run.row, 4, employee.position.name, cell_format)
+                worksheet.write(run.row, 5, employee.department.name, cell_format)
+                worksheet.write(run.row, 6, '\n'.join(email.email for email in employee.email), cell_format)
+                worksheet.write(run.row, 7, 'Есть' if employee.shared_folder else 'Нет')
+                worksheet.write(run.row, 8, 'Есть' if employee.network_printer else 'Нет')
+                worksheet.write(run.row, 9, employee.comments)
 
-    workbook.close()
+            for id, pc in enumerate(employee.pc):
+                worksheet.write(run.row, 10, id+1)
+                worksheet.write(run.row, 11, pc.pcname.domain.name)
+                worksheet.write(run.row, 12, pc.pcname.name)
+                worksheet.write(run.row, 13, pc.mac_address)
+                worksheet.write(run.row, 14, pc.app_server)
+                worksheet.write(run.row, 15, pc.powersocket.name)
+                worksheet.write(run.row, 16, pc.windows.name)
+                worksheet.write(run.row, 17, pc.windows_os_key)
+                worksheet.write(run.row, 18, pc.office.name)
+                worksheet.write(run.row, 19, pc.ms_office_key)
+                worksheet.write(run.row, 20, pc.mail_client)
+                worksheet.write(run.row, 21, pc.connectiontype.name)
+                worksheet.write(run.row, 22, 'Есть' if pc.kes else 'Нет')
+                worksheet.write(run.row, 23, pc.antivirus.name)
+                worksheet.write(run.row, 24, 'Есть' if pc.consultant else 'Нет')
+                worksheet.write(run.row, 25, 'Есть' if pc.guarantee else 'Нет')
+                worksheet.write(run.row, 26, 'Есть' if pc.odin_s else 'Нет')
+                worksheet.write(run.row, 27, 'Есть' if pc.kdc else 'Нет')
+                worksheet.write(run.row, 28, pc.comments)
+                run.row += 1
+
