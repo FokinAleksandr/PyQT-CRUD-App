@@ -1,11 +1,9 @@
 import xlsxwriter
+import os
 from app import data
 
-
-def run(session):
-
-    workbook = xlsxwriter.Workbook('Employees.xlsx')
-
+def run(path, session):
+    workbook = xlsxwriter.Workbook(os.path.join(path, 'Employees.xlsx'))
     for block in session.query(data.Block):
         worksheet = workbook.add_worksheet(block.address.name + '-' + block.name)
         worksheet.autofilter('A1:AC1')
@@ -105,3 +103,4 @@ def run(session):
                 worksheet.write(run.row, 28, pc.comments)
                 run.row += 1
 
+    workbook.close()

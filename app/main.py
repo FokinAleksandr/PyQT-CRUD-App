@@ -106,18 +106,35 @@ class MainWindow(QMainWindow):
         self.display_data()
 
     def excel(self):
-        session = data.Session()
-        try:
-            excel.run(session)
-        except PermissionError:
+        dlg = QInputDialog(self)                 
+        dlg.setInputMode(QInputDialog.TextInput) 
+        dlg.setTextValue(os.getcwd())
+        dlg.setLabelText("Введите путь до файла:")                        
+        dlg.resize(500,100)                             
+        ok = dlg.exec_()                                
+        path = dlg.textValue()
+        if not os.path.exists(path):
             QMessageBox.warning(
-                self, 'Предупреждение', 'Закройте файл Employees.xlsx в\n{}\nи попробуйте еще раз'.format(os.getcwd())
-                )
-        else:
-            QMessageBox.information(
-                self, 'Уведомление', 'Файл Employees.xlsx сгенерирован в папку\n{}'.format(os.getcwd())
-                )
-        session.close
+                    self, 'Уведомление', 'Неправильный путь!'
+                    )
+            return
+        if ok:
+            session = data.Session()
+            try:
+                QApplication.setOverrideCursor(Qt.WaitCursor)
+                excel.run(path, session)
+            except PermissionError:
+                QApplication.restoreOverrideCursor()
+                QMessageBox.information(
+                    self, 'Предупреждение', 'Закройте файл Employees.xlsx в\n{}\nи попробуйте еще раз'.format(path)
+                    )
+            else:
+                QApplication.restoreOverrideCursor()
+                QMessageBox.information(
+                    self, 'Уведомление', 'Файл Employees.xlsx сгенерирован в папку\n{}'.format(path)
+                    )
+            finally:
+                session.close()
 
     def set_and_center_the_window(self, x, y):
         self.resize(1220, 768)
