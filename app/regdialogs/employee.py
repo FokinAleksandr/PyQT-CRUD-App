@@ -1,25 +1,17 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 """
-Заводим новых работников
+Регистрируем новых сотрудников
 """
-import sys
-import os
-import psycopg2
-from app import data
-from app.functions import get_or_create
-from functools import partial
-from app.dialogs.exitmethods import Dialog
-from sqlalchemy.sql import exists
-from PyQt5 import QtCore
-from PyQt5.QtWidgets import (QWidget, QMessageBox, QPushButton,
-                             QToolTip, QDialog, QLineEdit, QCheckBox,
-                             QComboBox, QAction, QDoubleSpinBox,
-                             QFormLayout, QVBoxLayout, QHBoxLayout,
-                             QLabel, QToolButton, QMenu)
-from PyQt5.QtGui import (QIcon, QFont)
-from PyQt5.QtCore import Qt
-from PyQt5.Qt import QStandardItemModel
+from app.db import data
+from app.tools.functions import get_or_create
+from app.tools.exitmethods import Dialog
+from sqlalchemy.sql.operators import exists
+from PyQt5 import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.Qt import *
 
 class RegisterClient(Dialog):
     def __init__(self, session):

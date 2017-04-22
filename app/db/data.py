@@ -1,16 +1,14 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 """
-Tables
+PostgreSQL database tables
 """
-import sqlalchemy
-import psycopg2
+
 from sqlalchemy.orm import relationship, exc, column_property
-from sqlalchemy import (Table, Column, Integer, String, Boolean, ForeignKey,
-                        UniqueConstraint, PrimaryKeyConstraint)
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm.query import Query as _Query
-
+from sqlalchemy import (Table, Column, Integer, String, Boolean, ForeignKey,
+                        UniqueConstraint, PrimaryKeyConstraint)
 Base = declarative_base()
 Session = None
 

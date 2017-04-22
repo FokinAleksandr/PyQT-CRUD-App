@@ -1,5 +1,8 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
+"""
+Добавляем методы для подтверждения закрытия диалоговых окон
+"""
 from PyQt5.QtWidgets import QDialog, QMessageBox
 
 class Dialog(QDialog):

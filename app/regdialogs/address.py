@@ -1,21 +1,17 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-import sys
-import os
-import psycopg2
-from app.dialogs.exitmethods import Dialog
-from app import data
+"""
+Добавляем адреса и корпуса
+"""
+from app.tools.exitmethods import Dialog
+from app.db import data
 from functools import partial
 from sqlalchemy.orm import exc
-from PyQt5 import QtCore
-from PyQt5.QtWidgets import (QWidget, QMessageBox, QPushButton,
-                             QDialog, QVBoxLayout, QHBoxLayout,
-                             QLabel, QInputDialog, QListWidget,
-                             QListWidgetItem)
-
-from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import Qt, QSize
-from PyQt5.Qt import QPixmap
+from PyQt5 import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.Qt import *
 
 class ConfigureAddresses(Dialog):
     def __init__(self, session):

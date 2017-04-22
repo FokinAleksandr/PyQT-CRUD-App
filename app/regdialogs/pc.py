@@ -1,19 +1,17 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-import sys
-import os
-import psycopg2
-from app import data
-from app.functions import get_or_create
-from app.dialogs.exitmethods import Dialog
+"""
+Регистрируем новые компьютеры
+"""
+from app.db import data
+from app.tools.functions import get_or_create
+from app.tools.exitmethods import Dialog
 from sqlalchemy.sql.operators import exists
-from PyQt5.QtWidgets import (QWidget, QMessageBox, QPushButton,
-                             QToolTip, QDialog, QLineEdit, QCheckBox,
-                             QComboBox, QFormLayout, QVBoxLayout, QHBoxLayout)
-from PyQt5.QtGui import (QIcon, QFont)
-from PyQt5.QtCore import Qt
-from PyQt5 import QtCore
-from PyQt5.Qt import QRegExpValidator, QRegExp
+from PyQt5 import *
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.Qt import *
 
 
 

@@ -3,5 +3,5 @@
 if __name__ == '__main__':
 
     import sys
-    from app import application
-    sys.exit(application.run())
+    from app import main
+    sys.exit(main.run())

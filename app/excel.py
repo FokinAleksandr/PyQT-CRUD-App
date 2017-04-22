@@ -5,7 +5,7 @@ Excel generation
 """
 import xlsxwriter
 import os
-from app import data
+from app.db import data
 
 def run(path, session):
     workbook = xlsxwriter.Workbook(os.path.join(path, 'Employees.xlsx'))
