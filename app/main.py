@@ -26,30 +26,29 @@ class MainWindow(QMainWindow):
 
     def init_ui(self):
         self.set_and_center_the_window(1024,768)
-        self.setWindowTitle('РАН')
+        self.setWindowTitle('Учет сотрудников и компьютеров РАН')
         self.setWindowIcon(QIcon(r'pics\star.png'))
         
-        employee_action = QAction(QIcon(r'pics\employee.png'), 'Employee', self)
+        employee_action = QAction(QIcon(r'pics\add_user.png'), 'Добавить нового сотрудника', self)
         employee_action.triggered.connect(self.add_employee)
-        pc_action = QAction(QIcon(r'pics\pc.png'), 'Pc', self)
+        pc_action = QAction(QIcon(r'pics\add_pc.png'), 'Добавить новый компьютер', self)
         pc_action.triggered.connect(self.add_pc)
-        address_action = QAction(QIcon(r'pics\home.png'), 'Address', self)
+        address_action = QAction(QIcon(r'pics\add_address.png'), 'Добавить новый адрес', self)
         address_action.triggered.connect(self.add_address)
-        refresh_action = QAction(QIcon(r'pics\refresh.png'), 'Refresh', self)
-        refresh_action.triggered.connect(self.refresh)
         excel_action = QAction(QIcon(r'pics\excel.png'), 'Excel', self)
         excel_action.triggered.connect(self.excel)
-        toolbar = self.addToolBar("Toolbar")
+        toolbar = QToolBar()
+        self.addToolBar(Qt.LeftToolBarArea, toolbar)
         toolbar.addActions(
-            [employee_action, pc_action, address_action, refresh_action, excel_action]
+            [employee_action, pc_action, address_action, excel_action]
             )
 
     def display_data(self):
-        employee_table = EmployeeTable()
-        pc_table = QWidget()
+        self.employee_table = EmployeeTable()
+        self.pc_table = QWidget()
         tab_widget = QTabWidget()
-        tab_widget.addTab(employee_table, "Сотрудники")
-        tab_widget.addTab(pc_table, "Компьютеры")
+        tab_widget.addTab(self.employee_table, "Сотрудники")
+        tab_widget.addTab(self.pc_table, "Компьютеры")
         self.setCentralWidget(tab_widget)
     
     def add_employee(self):
@@ -58,6 +57,8 @@ class MainWindow(QMainWindow):
             reg_employee_window = employee.RegisterClient(session)
             if reg_employee_window.exec_() == QDialog.Accepted:
                 session.commit()
+                self.employee_table.set_filter_comboboxes()
+                self.employee_table.build_table()
                 print("Закоммитили")
         except exc.IntegrityError as errmsg:
             print(errmsg)
@@ -74,6 +75,7 @@ class MainWindow(QMainWindow):
             reg_pc_window = pc.RegisterPC(session)
             if reg_pc_window.exec_() == QDialog.Accepted:
                 session.commit()
+                self.employee_table.set_filter_comboboxes()
                 print("Закоммитили")
         except exc.IntegrityError as errmsg:
             print(errmsg)
@@ -90,6 +92,7 @@ class MainWindow(QMainWindow):
             address_window = address.ConfigureAddresses(session)
             if address_window.exec_() == QDialog.Accepted:
                 session.commit()
+                self.employee_table.set_filter_comboboxes()
                 print("Закоммитили")
         except exc.IntegrityError as errmsg:
             print(errmsg)
@@ -101,9 +104,6 @@ class MainWindow(QMainWindow):
             print('Все успешно')
         finally:
             session.close()
-    
-    def refresh(self):
-        self.display_data()
 
     def excel(self):
         dlg = QInputDialog(self)                 
@@ -115,7 +115,7 @@ class MainWindow(QMainWindow):
         path = dlg.textValue()
         if not os.path.exists(path):
             QMessageBox.warning(
-                    self, 'Уведомление', 'Неправильный путь!'
+                    self, 'Предупреждение', 'Неправильный путь!'
                     )
             return
         if ok:
@@ -125,7 +125,7 @@ class MainWindow(QMainWindow):
                 excel.run(path, session)
             except PermissionError:
                 QApplication.restoreOverrideCursor()
-                QMessageBox.information(
+                QMessageBox.warning(
                     self, 'Предупреждение', 'Закройте файл Employees.xlsx в\n{}\nи попробуйте еще раз'.format(path)
                     )
             else:
@@ -137,7 +137,7 @@ class MainWindow(QMainWindow):
                 session.close()
 
     def set_and_center_the_window(self, x, y):
-        self.resize(1220, 768)
+        self.resize(1280, 768)
         frame_geometry = self.frameGeometry()
         screen_center = QDesktopWidget().availableGeometry().center()
         frame_geometry.moveCenter(screen_center)
@@ -179,19 +179,8 @@ class EmployeeTable(QWidget):
         address_info_layout = QHBoxLayout()
 
         self.address_filter = QComboBox()
-        self.address_filter.addItem('Все')
-        self.address_filter.addItems(
-            self.session.query(data.Address.name).values()
-            )
         address_info_layout.addWidget(self.address_filter)
-
         self.block_filter = QComboBox()
-        self.block_filter.addItem('Все')
-        self.block_filter.addItems(
-            self.session.query(data.Block.name).\
-                distinct(data.Block.name).\
-                values()
-            )
         address_info_layout.addWidget(self.block_filter)
 
         self.room_filter = QLineEdit()
@@ -203,18 +192,10 @@ class EmployeeTable(QWidget):
 
         self.position_filter = QComboBox()
         self.position_filter.setEditable(True)
-        self.position_filter.addItem('')
-        self.position_filter.addItems(
-            row.name for row in self.session.query(data.Position) if row.name
-            )
         employee_info_layout.addWidget(self.position_filter)
 
         self.department_filter = QComboBox()
         self.department_filter.setEditable(True)
-        self.department_filter.addItem('')
-        self.department_filter.addItems(
-            row.name for row in self.session.query(data.Department) if row.name
-            )
         employee_info_layout.addWidget(self.department_filter)
         employee_info_layout.addLayout(address_info_layout)
 
@@ -249,7 +230,35 @@ class EmployeeTable(QWidget):
 
         self.layout().addLayout(filters_layout)
         self.layout().addWidget(self.main_table)
+        self.set_filter_comboboxes()
         self.build_table()
+
+    def set_filter_comboboxes(self):
+        self.address_filter.clear()
+        self.address_filter.addItem('Все')
+        self.address_filter.addItems(
+            self.session.query(data.Address.name).values()
+            )
+
+        self.block_filter.clear()
+        self.block_filter.addItem('Все')
+        self.block_filter.addItems(
+            self.session.query(data.Block.name).\
+                distinct(data.Block.name).\
+                values()
+            )
+
+        self.position_filter.clear()
+        self.position_filter.addItem('')
+        self.position_filter.addItems(
+            row.name for row in self.session.query(data.Position) if row.name
+            )
+
+        self.department_filter.clear()
+        self.department_filter.addItem('')
+        self.department_filter.addItems(
+            row.name for row in self.session.query(data.Department) if row.name
+            )
 
     def build_table(self):
         self.main_table.setRowCount(0)

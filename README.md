@@ -1,4 +1,3 @@
-SQLAlchemy + PyQt
-![](https://pp.userapi.com/c637617/v637617687/45c84/GQaShcbRqsk.jpg)
-![](https://pp.userapi.com/c637617/v637617687/45c8c/vwPYVrBqS5w.jpg)
-![](https://pp.userapi.com/c637617/v637617687/45c7d/_MifdenejzY.jpg)
+![](https://pp.userapi.com/c637616/v637616687/3b8f0/dkHRQzFF53I.jpg)
+![](https://pp.userapi.com/c637616/v637616687/3b8e7/w65SzH34C5k.jpg)
+![](https://pp.userapi.com/c637616/v637616687/3b8f7/Kj_lLe99q_g.jpg)
