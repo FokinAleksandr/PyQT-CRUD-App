@@ -3,9 +3,10 @@
 """
 Заводим новых работников
 """
+from app.editdialogs import employee
 from app.db import data
 from functools import partial
-from sqlalchemy import distinct
+from sqlalchemy import distinct, exc
 from PyQt5 import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
@@ -13,8 +14,8 @@ from PyQt5.QtCore import *
 from PyQt5.Qt import *
 
 class EmployeeTable(QWidget):
-    def __init__(self, parent=None):
-        QWidget.__init__(self, parent)
+    def __init__(self, *args, **kwargs):
+        QWidget.__init__(self, *args, **kwargs)
         self.session = data.Session()
         QVBoxLayout(self)
 
@@ -126,8 +127,8 @@ class EmployeeTable(QWidget):
         self.department_filter.clear()
         self.department_filter.addItem('')
         self.department_filter.addItems(
-            row.name for row in self.session.query(data.Department) if row.name
-            )
+           row.name for row in self.session.query(data.Department) if row.name
+           )
 
     def build_table(self):
         self.main_table.setRowCount(0)
@@ -138,39 +139,130 @@ class EmployeeTable(QWidget):
             outerjoin(data.Phone).\
             outerjoin(data.Department).\
             outerjoin(data.Position).\
-            filter(data.Employee.fullname.ilike('%' + self.fio_filter.text() + '%')).\
-            filter(data.Employee.unique_login.ilike('%' + self.login_filter.text() + '%'))
+            filter(
+                data.Employee.fullname.ilike(
+                    '%' + self.fio_filter.text() + '%'
+                    )
+                ).\
+            filter(
+                data.Employee.unique_login.ilike(
+                    '%' + self.login_filter.text() + '%'
+                    )
+                )
 
         if self.phone_filter.text():
-            employees = employees.filter(data.Phone.number.like('%' + self.phone_filter.text() + '%'))
+            employees = employees.filter(
+                data.Phone.number.like(
+                    '%' + self.phone_filter.text() + '%'
+                    )
+                )
         if self.department_filter.currentText():
-            employees = employees.filter(data.Department.name.ilike('%' + self.department_filter.currentText() + '%'))
+            employees = employees.filter(
+                data.Department.name.ilike(
+                    '%' + self.department_filter.currentText() + '%'
+                    )
+                )
         if self.position_filter.currentText():
-            employees = employees.filter(data.Position.name.ilike('%' + self.position_filter.currentText() + '%'))
+            employees = employees.filter(
+                data.Position.name.ilike(
+                    '%' + self.position_filter.currentText() + '%'
+                    )
+                )
         if self.address_filter.currentText() != 'Все':
-            employees = employees.filter(data.Address.name==self.address_filter.currentText())
+            employees = employees.filter(
+                data.Address.name==self.address_filter.currentText()
+                )
         if self.block_filter.currentText() != 'Все':
-            employees = employees.filter(data.Block.name==self.block_filter.currentText())
+            employees = employees.filter(
+                data.Block.name==self.block_filter.currentText()
+                )
         if self.room_filter.text():
-            employees = employees.filter(data.Room.name.like('%' + self.room_filter.text() + '%'))
+            employees = employees.filter(
+                data.Room.name.like(
+                    '%' + self.room_filter.text() + '%'
+                    )
+                )
 
         for row, employee in enumerate(employees):
             self.main_table.insertRow(row)
             self.main_table.setRowHeight(row, 50)
-            self.main_table.setItem(row, 0, QTableWidgetItem(QIcon(r'pics\employee.png'), employee.fullname))
-            self.main_table.setItem(row, 1, QTableWidgetItem(employee.unique_login))
-            self.main_table.setItem(row, 2, QTableWidgetItem(employee.position.name))
-            self.main_table.setItem(row, 3, QTableWidgetItem(employee.department.name))
-            self.main_table.setItem(row, 4, QTableWidgetItem(employee.room.block.address.name + ', ' + employee.room.block.name + '\n' + employee.room.name))
-            self.main_table.setItem(row, 5, QTableWidgetItem('\n'.join(phone.number for phone in employee.phone)))
-            self.main_table.setItem(row, 6, QTableWidgetItem('\n'.join(email.email for email in employee.email)))
-            self.main_table.setItem(row, 7, QTableWidgetItem(QIcon(r'pics\pc.png'), ' \n'.join(pc.pcname.domain.name + '/' + pc.pcname.name for pc in employee.pc)))
+            self.main_table.setItem(row, 0,
+                                    QTableWidgetItem(
+                                        QIcon(r'pics\employee.png'),
+                                        employee.fullname
+                                        )
+                                    )
+            self.main_table.setItem(row, 1,
+                                    QTableWidgetItem(
+                                        employee.unique_login
+                                        )
+                                    )
+            self.main_table.setItem(row, 2,
+                                    QTableWidgetItem(
+                                        employee.position.name
+                                        )
+                                    )
+            self.main_table.setItem(row, 3,
+                                    QTableWidgetItem(
+                                        employee.department.name
+                                        )
+                                    )
+            self.main_table.setItem(row, 4,
+                                    QTableWidgetItem(
+                                        employee.room.block.address.name + 
+                                        ', ' + 
+                                        employee.room.block.name +
+                                        '\n' +
+                                        employee.room.name
+                                        )
+                                    )
+            self.main_table.setItem(row, 5,
+                                    QTableWidgetItem(
+                                        '\n'.join(
+                                            phone.number 
+                                            for phone 
+                                            in employee.phone
+                                            )
+                                        )
+                                    )
+            self.main_table.setItem(row, 6,
+                                    QTableWidgetItem(
+                                        '\n'.join(
+                                            email.email 
+                                            for email 
+                                            in employee.email
+                                            )
+                                        )
+                                    )
+            self.main_table.setItem(row, 7,
+                                    QTableWidgetItem(
+                                        QIcon(r'pics\pc.png'),
+                                        ' \n'.join(
+                                            pc.pcname.domain.name +
+                                            '/' +
+                                            pc.pcname.name 
+                                            for pc 
+                                            in employee.pc
+                                            )
+                                        )
+                                    )
             edit_button = QPushButton('Просмотреть')
             edit_button.clicked.connect(
-                partial(self.edit_employee, employee=employee)
+                partial(self.edit_employee, employee_query_obj=employee)
                 )
             self.main_table.setCellWidget(row, 8, edit_button)
 
     @QtCore.pyqtSlot(data.Employee)
-    def edit_employee(self, employee):
-        print("Пока не готово")
+    def edit_employee(self, employee_query_obj):
+        try:
+            edit_employee_window = employee.EmployeeInfo(self.session, employee_query_obj)
+            if edit_employee_window.exec_() == QDialog.Accepted:
+                self.session.commit()
+                print("Закоммитили")
+        except exc.IntegrityError as errmsg:
+            print(errmsg)
+            self.session.rollback()
+            QMessageBox.critical(self, 'Критическая ошибка', 'Ошибка базы данных. Попробуйте еще раз.')
+        else:
+            print('Все успешно')
+        

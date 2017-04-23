@@ -28,13 +28,21 @@ class MainWindow(QMainWindow):
         self.setWindowTitle('Учет сотрудников и компьютеров РАН')
         self.setWindowIcon(QIcon(r'pics\star.png'))
         
-        employee_action = QAction(QIcon(r'pics\add_user.png'), 'Добавить нового сотрудника', self)
+        employee_action = QAction(
+            QIcon(r'pics\add_user.png'), 'Добавить нового сотрудника', self
+            )
         employee_action.triggered.connect(self.add_employee)
-        pc_action = QAction(QIcon(r'pics\add_pc.png'), 'Добавить новый компьютер', self)
+        pc_action = QAction(
+            QIcon(r'pics\add_pc.png'), 'Добавить новый компьютер', self
+            )
         pc_action.triggered.connect(self.add_pc)
-        address_action = QAction(QIcon(r'pics\add_address.png'), 'Добавить новый адрес', self)
+        address_action = QAction(
+            QIcon(r'pics\add_address.png'), 'Добавить новый адрес', self
+            )
         address_action.triggered.connect(self.add_address)
-        excel_action = QAction(QIcon(r'pics\excel.png'), 'Excel', self)
+        excel_action = QAction(
+            QIcon(r'pics\excel.png'), 'Excel', self
+            )
         excel_action.triggered.connect(self.excel)
         toolbar = QToolBar()
         self.addToolBar(Qt.LeftToolBarArea, toolbar)
@@ -44,16 +52,16 @@ class MainWindow(QMainWindow):
 
     def display_data(self):
         self.employee_table = EmployeeTable()
-        self.pc_table = QWidget()
+
         tab_widget = QTabWidget()
         tab_widget.addTab(self.employee_table, "Сотрудники")
-        tab_widget.addTab(self.pc_table, "Компьютеры")
+
         self.setCentralWidget(tab_widget)
     
     def add_employee(self):
         session = data.Session()
         try:
-            reg_employee_window = employee.RegisterClient(session)
+            reg_employee_window = employee.RegisterEmployee(session)
             if reg_employee_window.exec_() == QDialog.Accepted:
                 session.commit()
                 self.employee_table.set_filter_comboboxes()
@@ -62,7 +70,10 @@ class MainWindow(QMainWindow):
         except exc.IntegrityError as errmsg:
             print(errmsg)
             session.rollback()
-            QMessageBox.critical(self, 'Критическая ошибка', 'Ошибка базы данных. Попробуйте еще раз.')
+            QMessageBox.critical(
+                self, 'Критическая ошибка',
+                'Ошибка базы данных. Попробуйте еще раз.'
+                )
         else:
             print('Все успешно')
         finally:
@@ -79,7 +90,10 @@ class MainWindow(QMainWindow):
         except exc.IntegrityError as errmsg:
             print(errmsg)
             session.rollback()
-            QMessageBox.critical(self, 'Критическая ошибка', 'Ошибка базы данных. Попробуйте еще раз.')
+            QMessageBox.critical(
+                self, 'Критическая ошибка',
+                'Ошибка базы данных. Попробуйте еще раз.'
+                )
         else:
             print('Все успешно')
         finally:
@@ -97,7 +111,8 @@ class MainWindow(QMainWindow):
             print(errmsg)
             session.rollback()
             QMessageBox.critical(
-                self, 'Критическая ошибка', 'Ошибка базы данных. Попробуйте еще раз.'
+                self, 'Критическая ошибка',
+                'Ошибка базы данных. Попробуйте еще раз.'
                 )
         else:
             print('Все успешно')
@@ -125,12 +140,22 @@ class MainWindow(QMainWindow):
             except PermissionError:
                 QApplication.restoreOverrideCursor()
                 QMessageBox.warning(
-                    self, 'Предупреждение', 'Закройте файл Employees.xlsx в\n{}\nи попробуйте еще раз'.format(path)
+                    self, 'Предупреждение',
+                    'Закройте файл Employees.xlsx в\n' +
+                    '{}\n' +
+                    'и попробуйте еще раз'.format(path)
+                    )
+            except OSError:
+                QApplication.restoreOverrideCursor()
+                QMessageBox.warning(
+                    self, 'Ошибка!',
+                    'Попробуйте другой путь'.format(path)
                     )
             else:
                 QApplication.restoreOverrideCursor()
                 QMessageBox.information(
-                    self, 'Уведомление', 'Файл Employees.xlsx сгенерирован в папку\n{}'.format(path)
+                    self, 'Уведомление',
+                    'Employees.xlsx сгенерирован в папку\n{}'.format(path)
                     )
             finally:
                 session.close()

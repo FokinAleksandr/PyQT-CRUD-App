@@ -13,24 +13,24 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.Qt import *
 
-class RegisterClient(Dialog):
+class RegisterEmployee(Dialog):
     def __init__(self, session):
-        QDialog.__init__(self)  
+        QDialog.__init__(self)
         self.session = session
-        self.init_ui()
-        self.show()
+        self.init_window()
+        self.init_layouts()
      
-    def init_ui(self):
+    def init_window(self):
         self.setFixedWidth(550)
         self.setMaximumHeight(470)
         self.setWindowModality(2)
-        self.setWindowTitle('Регистрируем клиента')
+        self.setWindowTitle('Регистрируем сотрудника')
         self.setWindowIcon(QIcon(r'pics\employee.png'))
 
+    def init_layouts(self):
         buttons_layout = QHBoxLayout()
 
         back_button = QPushButton('Назад')
-        back_button.setToolTip('Возвращаемся назад')
         back_button.clicked.connect(self.close)
         submit_button = QPushButton('Внести в базу данных')
         submit_button.clicked.connect(self.validate_input)
@@ -62,32 +62,26 @@ class RegisterClient(Dialog):
         phone_edit = QLineEdit()
         phone_edit.setInputMask('+7(999)999-99-99;_');
         self.phone_edit = [phone_edit]
-
         self.add_phone_button = QPushButton('+')
-        self.add_phone_button.setFixedSize(self.add_phone_button.sizeHint())
-        
+        self.add_phone_button.clicked.connect(self.add_phone)
+        self.add_phone_button.setFixedSize(self.add_phone_button.sizeHint())      
         phone_layout = QHBoxLayout()
         phone_layout.addWidget(phone_edit)
         phone_layout.addWidget(self.add_phone_button)
         form_layout.addRow(
             'Телефон:', phone_layout
-            )
-        self.add_phone_button.clicked.connect(self.add_phone)
-        
+            )      
         email_edit = QLineEdit()
         self.email_edit = [email_edit]
-
         self.add_email_button = QPushButton('+')
-        self.add_email_button.setFixedSize(self.add_email_button.sizeHint())
-        
+        self.add_email_button.clicked.connect(self.add_email)
+        self.add_email_button.setFixedSize(self.add_email_button.sizeHint())     
         email_layout = QHBoxLayout()
         email_layout.addWidget(email_edit)
         email_layout.addWidget(self.add_email_button)
         form_layout.addRow(
             'Email:', email_layout
-            )
-        self.add_email_button.clicked.connect(self.add_email)
-        
+            )       
         self.position_edit = QComboBox()
         self.position_edit.setEditable(True)   
         self.position_edit.addItems(
@@ -97,7 +91,6 @@ class RegisterClient(Dialog):
         form_layout.addRow(
             'Должность:', self.position_edit
             )
-
         self.department_edit = QComboBox()
         self.department_edit.setEditable(True)
         self.department_edit.addItems(
@@ -107,7 +100,6 @@ class RegisterClient(Dialog):
         form_layout.addRow(
             'Отдел:', self.department_edit
             )
-
         self.address_edit = QComboBox()
         self.address_edit.addItems(
             self.session.query(data.Address.name).values()
@@ -136,11 +128,11 @@ class RegisterClient(Dialog):
             )
         self.comments_edit = QLineEdit()
         self.comments_edit.setClearButtonEnabled(True)
-        form_layout.addRow('Прочее:', self.comments_edit)
-       
+        form_layout.addRow(
+            'Прочее:', self.comments_edit
+            )       
         self.toolbutton = QToolButton(self)
         self.toolbutton.setText('Выбрать')
-
         self.toolmenu = Menu()
         for tup in self.session.query(data.Domain.name, data.PcName.name).\
             join(data.PcName).all():       
@@ -148,17 +140,19 @@ class RegisterClient(Dialog):
                 QIcon(r'pics\pc.png'),
                 "{}/{}".format(tup[0],tup[1]))
             action.setCheckable(True)
-
         self.toolbutton.setMenu(self.toolmenu)
         self.toolbutton.setPopupMode(QToolButton.InstantPopup)
-        form_layout.addRow('Выбор компьютеров:', self.toolbutton)
-
+        form_layout.addRow(
+            'Выбор компьютеров:', self.toolbutton
+            )
         self.shared_folder_edit = QCheckBox()
-        form_layout.addRow('Общие папки:', self.shared_folder_edit)
-        
+        form_layout.addRow(
+            'Общие папки:', self.shared_folder_edit
+            )       
         self.network_printer_edit = QCheckBox()
-        form_layout.addRow('Сетевой принтер:', self.network_printer_edit)
-
+        form_layout.addRow(
+            'Сетевой принтер:', self.network_printer_edit
+            )
         form_layout.addRow(buttons_layout)
    
     @QtCore.pyqtSlot()

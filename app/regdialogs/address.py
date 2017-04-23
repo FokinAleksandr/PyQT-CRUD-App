@@ -18,7 +18,6 @@ class ConfigureAddresses(Dialog):
         QDialog.__init__(self)       
         self.session = session
         self.init_ui()
-        self.show()
 
     def init_ui(self):
         self.resize(900, 800)
