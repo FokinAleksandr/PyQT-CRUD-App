@@ -24,7 +24,7 @@ class LoginWindow(QDialog):
         self.setWindowTitle('Логин')
         self.setWindowIcon(QIcon(r'pics\star.png'))
         self.setWindowFlags(Qt.MSWindowsFixedSizeDialogHint)
-        
+
         self.employeename_input = QLineEdit('bog')
         self.password_input = QLineEdit('1234') 
         self.password_input.setEchoMode(QLineEdit.Password)
@@ -57,7 +57,7 @@ class LoginWindow(QDialog):
                         self.host_input.text(), self.port_input.text(), self.db_input.text()
         )
         try:
-            engine = sqlalchemy.create_engine(url)
+            engine = sqlalchemy.create_engine(url, echo=True)
             data.Base.metadata.create_all(engine)
         except ValueError:
             QMessageBox.warning(self, 'Ошибка!', 'Неправильно введены данные!')

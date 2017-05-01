@@ -247,7 +247,6 @@ class EmployeeInfo(Dialog):
             )
         ############################################################################################
         self.comments_edit = QLineEdit()
-        self.comments_edit.setClearButtonEnabled(True)
         edit_info_layout.addRow(
             '<b>Прочее:</b>', self.comments_edit
             )       

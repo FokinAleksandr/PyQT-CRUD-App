@@ -1,7 +1,10 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
+import sys
+import os
+from app import main
 if __name__ == '__main__':
 
-    import sys
+    os.chdir((os.path.dirname(os.path.realpath(__file__))))
     from app import main
     sys.exit(main.run())
