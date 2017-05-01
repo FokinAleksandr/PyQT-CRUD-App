@@ -64,8 +64,14 @@ class MainWindow(QMainWindow):
             reg_employee_window = employee.RegisterEmployee(session)
             if reg_employee_window.exec_() == QDialog.Accepted:
                 session.commit()
+                QMessageBox.information(
+                    self, 'Уведомление',
+                    'Сотрудник успешно занесен в базу'
+                    )
+                QApplication.setOverrideCursor(Qt.WaitCursor)
                 self.employee_table.set_filter_comboboxes()
                 self.employee_table.build_table()
+                QApplication.restoreOverrideCursor()
                 print("Закоммитили")
         except exc.IntegrityError as errmsg:
             print(errmsg)
@@ -86,7 +92,10 @@ class MainWindow(QMainWindow):
             if reg_pc_window.exec_() == QDialog.Accepted:
                 session.commit()
                 self.employee_table.set_filter_comboboxes()
-                print("Закоммитили")
+                QMessageBox.information(
+                    self, 'Уведомление',
+                    'Компьютер успешно занесен в базу'
+                    )
         except exc.IntegrityError as errmsg:
             print(errmsg)
             session.rollback()
@@ -169,12 +178,27 @@ class MainWindow(QMainWindow):
 
 def run():
     app = QApplication([])
-    
-    login_window = login.LoginWindow()
 
+    splash_pix = QPixmap(r'pics\splash_loading.png')
+    splash = QSplashScreen(splash_pix, Qt.WindowStaysOnTopHint)
+    splash.setMask(splash_pix.mask())
+    splash.show()
+    app.processEvents()
+
+    login_window = login.LoginWindow()
+    splash.finish(login_window)
     result = login_window.exec_()
+
+
+    splash_pix = QPixmap(r'pics\splash_loading.png')
+    splash = QSplashScreen(splash_pix, Qt.WindowStaysOnTopHint)
+    splash.setMask(splash_pix.mask())
+    splash.show()
+    app.processEvents()
+
     if result == QDialog.Accepted:
         main_window = MainWindow()
+        splash.finish(main_window)
     else:
         sys.exit(result)
 

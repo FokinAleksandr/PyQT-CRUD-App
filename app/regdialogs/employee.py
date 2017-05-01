@@ -19,7 +19,7 @@ class RegisterEmployee(Dialog):
         self.session = session
         self.init_window()
         self.init_layouts()
-     
+
     def init_window(self):
         self.setFixedWidth(550)
         self.setMaximumHeight(470)
@@ -40,21 +40,25 @@ class RegisterEmployee(Dialog):
         form_layout = QFormLayout(self)
 
         self.surname_edit = QLineEdit()
+        self.surname_edit.setValidator(QRegExpValidator(QRegExp("[^ ]+")))
         self.surname_edit.setClearButtonEnabled(True)
         form_layout.addRow(
             'Фамилия:<font color="red">*</font>', self.surname_edit
             )
         self.name_edit = QLineEdit()
+        self.name_edit.setValidator(QRegExpValidator(QRegExp("[^ ]+")))
         self.name_edit.setClearButtonEnabled(True)
         form_layout.addRow(
             'Имя:<font color="red">*</font>', self.name_edit
             )
         self.patronymic_edit = QLineEdit()
+        self.patronymic_edit.setValidator(QRegExpValidator(QRegExp("[^ ]+")))
         self.patronymic_edit.setClearButtonEnabled(True)
         form_layout.addRow(
             'Отчество:', self.patronymic_edit
             )
         self.login_edit = QLineEdit()
+        self.login_edit.setValidator(QRegExpValidator(QRegExp("[^ ]+")))
         self.login_edit.setClearButtonEnabled(True)
         form_layout.addRow(
             'Логин:<font color="red">*</font>', self.login_edit
@@ -110,7 +114,6 @@ class RegisterEmployee(Dialog):
         form_layout.addRow(
             'Адрес:<font color="red">*</font>', self.address_edit
             )
-
         self.block_edit = QComboBox()
         form_layout.addRow(
             'Корпус:<font color="red">*</font>', self.block_edit
@@ -138,7 +141,7 @@ class RegisterEmployee(Dialog):
             join(data.PcName).all():       
             action = self.toolmenu.addAction(
                 QIcon(r'pics\pc.png'),
-                "{}/{}".format(tup[0],tup[1]))
+                "{}/{}".format(tup[0], tup[1]))
             action.setCheckable(True)
         self.toolbutton.setMenu(self.toolmenu)
         self.toolbutton.setPopupMode(QToolButton.InstantPopup)
@@ -283,6 +286,7 @@ class RegisterEmployee(Dialog):
 
 
     def process_data(self):
+        QApplication.setOverrideCursor(Qt.WaitCursor)
         employee = data.Employee(
             surname         = self.surname_edit.text(),
             name            = self.name_edit.text(),
@@ -340,6 +344,7 @@ class RegisterEmployee(Dialog):
                     filter(data.Domain.name==domain_text).\
                     one()
                 employee.pc.append(pc)
+        QApplication.restoreOverrideCursor()
 
 class Menu(QMenu):
     def __init__(self):

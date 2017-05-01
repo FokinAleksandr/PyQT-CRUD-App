@@ -14,6 +14,7 @@ from PyQt5.QtCore import *
 from PyQt5.Qt import *
 
 class RegisterPC(Dialog):
+
     def __init__(self, session):
         QDialog.__init__(self)       
         self.session = session
@@ -171,6 +172,7 @@ class RegisterPC(Dialog):
 
     @QtCore.pyqtSlot()
     def validate_input(self):
+
         if not self.mac_edit.text() or not self.pc_name_edit.text():
             QMessageBox.warning(
                 self,'Предупреждение',
@@ -201,6 +203,7 @@ class RegisterPC(Dialog):
             self.session.rollback()
 
     def process_data(self):
+        QApplication.setOverrideCursor(Qt.WaitCursor)
         pcname = data.PcName(
             name = self.pc_name_edit.text()
         )
@@ -244,3 +247,4 @@ class RegisterPC(Dialog):
             self.session, data.Antivirus, 
             name=self.antivirus_edit.currentText()
         )
+        QApplication.restoreOverrideCursor()

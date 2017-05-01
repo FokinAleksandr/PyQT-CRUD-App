@@ -57,7 +57,7 @@ class LoginWindow(QDialog):
                         self.host_input.text(), self.port_input.text(), self.db_input.text()
         )
         try:
-            engine = sqlalchemy.create_engine(url, echo=True)
+            engine = sqlalchemy.create_engine(url)
             data.Base.metadata.create_all(engine)
         except ValueError:
             QMessageBox.warning(self, 'Ошибка!', 'Неправильно введены данные!')

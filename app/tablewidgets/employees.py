@@ -7,6 +7,7 @@ from app.editdialogs import employee
 from app.db import data
 from functools import partial
 from sqlalchemy import distinct, exc
+from sqlalchemy.orm import joinedload
 from PyQt5 import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
@@ -83,25 +84,21 @@ class EmployeeTable(QWidget):
         filters_layout.addStretch()
 
         self.main_table = QTableWidget()
-        self.main_table.setSelectionMode(QAbstractItemView.NoSelection)
+        self.main_table.setSelectionMode(QAbstractItemView.SingleSelection)
         self.main_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
-        self.main_table.setColumnCount(9)
+        self.main_table.setTextElideMode(Qt.ElideNone)
         self.main_table.setAlternatingRowColors(True)
+        self.main_table.setColumnCount(9)
         self.main_table.setHorizontalHeaderLabels(
             ['ФИО', 'Логин', 'Должность', 'Отдел', 'Место работы', 'Телефон',
              'Email', 'Домен/Имя компьютера', '']
             )
-        self.main_table.setColumnWidth(0, 130)
-        self.main_table.setColumnWidth(2, 150)
-        self.main_table.setColumnWidth(3, 145)
-        self.main_table.setColumnWidth(4, 120)
-        self.main_table.setColumnWidth(6, 130)
-        self.main_table.setColumnWidth(7, 180)
-
         self.layout().addLayout(filters_layout)
         self.layout().addWidget(self.main_table)
+        QApplication.setOverrideCursor(Qt.WaitCursor)
         self.set_filter_comboboxes()
         self.build_table()
+        QApplication.restoreOverrideCursor()
 
     def set_filter_comboboxes(self):
         self.address_filter.clear()
@@ -140,33 +137,23 @@ class EmployeeTable(QWidget):
             outerjoin(data.Department).\
             outerjoin(data.Position).\
             filter(
-                data.Employee.fullname.ilike(
-                    '%' + self.fio_filter.text() + '%'
-                    )
+                data.Employee.fullname.ilike('%{}%'.format(self.fio_filter.text()))
                 ).\
             filter(
-                data.Employee.unique_login.ilike(
-                    '%' + self.login_filter.text() + '%'
-                    )
+                data.Employee.unique_login.ilike('%{}%'.format(self.login_filter.text()))
                 )
 
         if self.phone_filter.text():
             employees = employees.filter(
-                data.Phone.number.like(
-                    '%' + self.phone_filter.text() + '%'
-                    )
+                data.Phone.number.like('%{}%'.format(self.phone_filter.text()))
                 )
         if self.department_filter.currentText():
             employees = employees.filter(
-                data.Department.name.ilike(
-                    '%' + self.department_filter.currentText() + '%'
-                    )
+                data.Department.name.ilike('%{}%'.format(self.department_filter.currentText()))
                 )
         if self.position_filter.currentText():
             employees = employees.filter(
-                data.Position.name.ilike(
-                    '%' + self.position_filter.currentText() + '%'
-                    )
+                data.Position.name.ilike('%{}%'.format(self.position_filter.currentText()))
                 )
         if self.address_filter.currentText() != 'Все':
             employees = employees.filter(
@@ -178,9 +165,7 @@ class EmployeeTable(QWidget):
                 )
         if self.room_filter.text():
             employees = employees.filter(
-                data.Room.name.like(
-                    '%' + self.room_filter.text() + '%'
-                    )
+                data.Room.name.like('%{}%'.format(self.room_filter.text()))
                 )
 
         for row, employee in enumerate(employees):
@@ -218,7 +203,7 @@ class EmployeeTable(QWidget):
                                     )
             self.main_table.setItem(row, 5,
                                     QTableWidgetItem(
-                                        '\n'.join(
+                                        ';\n'.join(
                                             phone.number 
                                             for phone 
                                             in employee.phone
@@ -227,7 +212,7 @@ class EmployeeTable(QWidget):
                                     )
             self.main_table.setItem(row, 6,
                                     QTableWidgetItem(
-                                        '\n'.join(
+                                        ';\n'.join(
                                             email.email 
                                             for email 
                                             in employee.email
@@ -237,7 +222,7 @@ class EmployeeTable(QWidget):
             self.main_table.setItem(row, 7,
                                     QTableWidgetItem(
                                         QIcon(r'pics\pc.png'),
-                                        ' \n'.join(
+                                        ';\n'.join(
                                             pc.pcname.domain.name +
                                             '/' +
                                             pc.pcname.name 
@@ -251,13 +236,36 @@ class EmployeeTable(QWidget):
                 partial(self.edit_employee, employee_query_obj=employee)
                 )
             self.main_table.setCellWidget(row, 8, edit_button)
+        self.main_table.resizeColumnsToContents()
 
     @QtCore.pyqtSlot(data.Employee)
     def edit_employee(self, employee_query_obj):
         try:
             edit_employee_window = employee.EmployeeInfo(self.session, employee_query_obj)
             if edit_employee_window.exec_() == QDialog.Accepted:
-                self.session.commit()
+                QApplication.setOverrideCursor(Qt.WaitCursor)
+                for room in self.session.query(data.Room).\
+                                options(joinedload(data.Room.employee)).\
+                                filter(data.Room.employee == None).\
+                                all():
+                    self.session.delete(room)
+
+                for position in self.session.query(data.Position).\
+                                options(joinedload(data.Position.employee)).\
+                                filter(data.Position.employee == None).\
+                                all():
+                    self.session.delete(position)
+
+                for department in self.session.query(data.Department).\
+                                options(joinedload(data.Department.employee)).\
+                                filter(data.Department.employee == None).\
+                                all():
+                    self.session.delete(department)
+
+                self.session.commit()                
+                self.set_filter_comboboxes()
+                self.build_table()
+                QApplication.restoreOverrideCursor()
                 print("Закоммитили")
         except exc.IntegrityError as errmsg:
             print(errmsg)
@@ -265,4 +273,3 @@ class EmployeeTable(QWidget):
             QMessageBox.critical(self, 'Критическая ошибка', 'Ошибка базы данных. Попробуйте еще раз.')
         else:
             print('Все успешно')
-        
