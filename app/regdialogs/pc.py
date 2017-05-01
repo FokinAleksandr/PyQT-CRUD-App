@@ -59,9 +59,11 @@ class RegisterPC(Dialog):
         self.power_socket_edit = QComboBox()
         self.power_socket_edit.setEditable(True)
         self.session.query(data.PowerSocket.name).values()
-        self.power_socket_edit.addItems(
-            self.session.query(data.PowerSocket.name).values()
-            )
+        self.power_socket_edit.addItems([
+            pow_socket 
+            for (pow_socket,) in self.session.query(data.PowerSocket.name)
+            if pow_socket
+            ])
         self.power_socket_edit.setCurrentText('')
         form_layout.addRow(
             'Номер розетки:', self.power_socket_edit
@@ -71,18 +73,22 @@ class RegisterPC(Dialog):
         self.connection_type_edit.setValidator(
             QRegExpValidator(QRegExp("[^А-ЯA-Z]+"))
             )   
-        self.connection_type_edit.addItems(
-            self.session.query(data.ConnectionType.name).values()
-            )
+        self.connection_type_edit.addItems([
+            conn_type 
+            for (conn_type,) in self.session.query(data.ConnectionType.name)
+            if conn_type
+            ])
         self.connection_type_edit.setCurrentText('')
         form_layout.addRow(
             'Как подлючен:', self.connection_type_edit
             )
         self.domain_edit = QComboBox()
         self.domain_edit.setEditable(True)
-        self.domain_edit.addItems(
-            self.session.query(data.Domain.name).values()
-            )
+        self.domain_edit.addItems([
+            domain 
+            for (domain,) in self.session.query(data.Domain.name)
+            if domain
+            ])
         self.domain_edit.setCurrentText('')
         form_layout.addRow(
             'Домен:', self.domain_edit
@@ -97,9 +103,11 @@ class RegisterPC(Dialog):
         self.windows_os_edit.setValidator(
             QRegExpValidator(QRegExp("[^A-Z]+"))
             )
-        self.windows_os_edit.addItems(
-            self.session.query(data.Windows.name).values()
-            )
+        self.windows_os_edit.addItems([
+            windows 
+            for (windows,) in self.session.query(data.Windows.name)
+            if windows
+            ])
         self.windows_os_edit.setCurrentText('')
         form_layout.addRow(
             'Windows OS:', self.windows_os_edit
@@ -109,9 +117,11 @@ class RegisterPC(Dialog):
         self.ms_office_edit.setValidator(
             QRegExpValidator(QRegExp("[^A-Z]+"))
             )       
-        self.ms_office_edit.addItems(
-            self.session.query(data.Office.name).values()
-            )
+        self.ms_office_edit.addItems([
+            office 
+            for (office,) in self.session.query(data.Office.name)
+            if office
+            ])
         self.ms_office_edit.setCurrentText('')
         form_layout.addRow(
             'Microsoft Office:', self.ms_office_edit
@@ -121,9 +131,11 @@ class RegisterPC(Dialog):
         self.antivirus_edit.setValidator(
             QRegExpValidator(QRegExp("[^A-Z]+"))
             )   
-        self.antivirus_edit.addItems(
-            self.session.query(data.Antivirus.name).values()
-            )
+        self.antivirus_edit.addItems([
+            antivirus 
+            for (antivirus,) in self.session.query(data.Antivirus.name)
+            if antivirus
+            ])
         self.antivirus_edit.setCurrentText('')
         form_layout.addRow(
             'Антивирус:', self.antivirus_edit

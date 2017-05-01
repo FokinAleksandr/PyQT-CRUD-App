@@ -6,8 +6,6 @@
 from PyQt5.QtWidgets import QDialog, QMessageBox
 
 class Dialog(QDialog):
-    def __init__(self):
-        QDialog.__init__(self)
 
     def closeEvent(self, evnt):
         msg_box = QMessageBox(self)

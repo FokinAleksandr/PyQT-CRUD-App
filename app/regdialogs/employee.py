@@ -88,18 +88,22 @@ class RegisterEmployee(Dialog):
             )       
         self.position_edit = QComboBox()
         self.position_edit.setEditable(True)   
-        self.position_edit.addItems(
-            self.session.query(data.Position.name).values()
-            )
+        self.position_edit.addItems([
+            position
+            for (position,) in self.session.query(data.Position.name)
+            if position
+            ])
         self.position_edit.setCurrentText('')
         form_layout.addRow(
             'Должность:', self.position_edit
             )
         self.department_edit = QComboBox()
         self.department_edit.setEditable(True)
-        self.department_edit.addItems(
-            self.session.query(data.Department.name).values()
-            )
+        self.department_edit.addItems([
+            department 
+            for (department,) in self.session.query(data.Department.name)
+            if department
+            ])
         self.department_edit.setCurrentText('')
         form_layout.addRow(
             'Отдел:', self.department_edit
