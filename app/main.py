@@ -7,7 +7,7 @@ import sys
 import os
 from app import login, excel
 from app.regdialogs import address, employee, pc
-from app.tablewidgets.employees import EmployeeTable
+from app.tablewidgets import employees
 from app.db import data
 from sqlalchemy import exc
 from PyQt5 import *
@@ -51,7 +51,7 @@ class MainWindow(QMainWindow):
             )
 
     def display_data(self):
-        self.employee_table = EmployeeTable()
+        self.employee_table = employees.EmployeeTable()
 
         tab_widget = QTabWidget()
         tab_widget.addTab(self.employee_table, "Сотрудники")
@@ -129,45 +129,36 @@ class MainWindow(QMainWindow):
             session.close()
 
     def excel(self):
-        dlg = QInputDialog(self)                 
-        dlg.setInputMode(QInputDialog.TextInput) 
-        dlg.setTextValue(os.getcwd())
-        dlg.setLabelText("Введите путь до файла:")                        
-        dlg.resize(500,100)                             
-        ok = dlg.exec_()                                
-        path = dlg.textValue()
-        if not os.path.exists(path):
-            QMessageBox.warning(
-                    self, 'Предупреждение', 'Неправильный путь!'
-                    )
+        filename = QFileDialog.getSaveFileName(self, 'Сохрание excel файла', filter='*.xlsx')
+        if not filename[1]:
             return
-        if ok:
-            session = data.Session()
-            try:
-                QApplication.setOverrideCursor(Qt.WaitCursor)
-                excel.run(path, session)
-            except PermissionError:
-                QApplication.restoreOverrideCursor()
-                QMessageBox.warning(
-                    self, 'Предупреждение',
-                    'Закройте файл Employees.xlsx в\n' +
-                    '{}\n' +
-                    'и попробуйте еще раз'.format(path)
-                    )
-            except OSError:
-                QApplication.restoreOverrideCursor()
-                QMessageBox.warning(
-                    self, 'Ошибка!',
-                    'Попробуйте другой путь'.format(path)
-                    )
-            else:
-                QApplication.restoreOverrideCursor()
-                QMessageBox.information(
-                    self, 'Уведомление',
-                    'Employees.xlsx сгенерирован в папку\n{}'.format(path)
-                    )
-            finally:
-                session.close()
+        else:
+            filename = filename[0]
+        session = data.Session()
+        try:
+            QApplication.setOverrideCursor(Qt.WaitCursor)
+            excel.run(filename, session)
+        except PermissionError:
+            QApplication.restoreOverrideCursor()
+            QMessageBox.warning(
+                self, 'Предупреждение',
+                'Закройте {}\n' +
+                'и попробуйте еще раз'.format(filename)
+                )
+        except OSError:
+            QApplication.restoreOverrideCursor()
+            QMessageBox.warning(
+                self, 'Ошибка!',
+                'Попробуйте другой путь'
+                )
+        else:
+            QApplication.restoreOverrideCursor()
+            QMessageBox.information(
+                self, 'Уведомление',
+                'Сгенерирован: {}'.format(filename)
+                )
+        finally:
+            session.close()
 
     def set_and_center_the_window(self, x, y):
         self.resize(1280, 768)
