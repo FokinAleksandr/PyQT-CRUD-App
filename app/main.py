@@ -66,7 +66,7 @@ class MainWindow(QMainWindow):
                 session.commit()
                 QMessageBox.information(
                     self, 'Уведомление',
-                    'Сотрудник успешно занесен в базу'
+                    'Сотрудник успешно добавлен'
                     )
                 QApplication.setOverrideCursor(Qt.WaitCursor)
                 self.employee_table.set_filter_comboboxes()
@@ -94,7 +94,7 @@ class MainWindow(QMainWindow):
                 self.employee_table.set_filter_comboboxes()
                 QMessageBox.information(
                     self, 'Уведомление',
-                    'Компьютер успешно занесен в базу'
+                    'Компьютер успешно добавлен'
                     )
         except exc.IntegrityError as errmsg:
             print(errmsg)

@@ -4,14 +4,15 @@
 Полная информация о сотруднике
 """
 from app.db import data
+from app.tools.functions import get_or_create
+from app.tools.exitmethods import Dialog
+from app.tablewidgets.pcsadd import PCAdd
 from _functools import partial
 from PyQt5 import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.Qt import *
-from app.tools.functions import get_or_create
-from app.tools.exitmethods import Dialog
 
 class EmployeeInfo(Dialog):
     def __init__(self, session, employee):
@@ -437,32 +438,11 @@ class EmployeeInfo(Dialog):
 
     @QtCore.pyqtSlot()
     def add_table_row(self):
-        dlg = QInputDialog(self)             
-        add_pcs = self.session.query(data.Pc).\
-            filter(~data.Pc.employee.contains(self.employee)).\
-            all()
-        if not add_pcs:
-            QMessageBox.warning(
-                    self, 'Ошибка',
-                    'Не из чего выбирать'
-                    )
-            return
-        dlg.setOption(QInputDialog.UseListViewForComboBoxItems)
-        dlg.setComboBoxItems([pc.pcname.domain.name + '/' + pc.pcname.name for pc in add_pcs])
-        dlg.setLabelText("Выберите новый компьютер".format(self.employee.fullname))                        
-        dlg.resize(200,500)                             
-        ok = dlg.exec_()                                
-        text = dlg.textValue()
-        if ok:
-            text = text.split('/')
-            pc = self.session.query(data.Pc).\
-                    join(data.PcName).\
-                    join(data.Domain).\
-                    filter(data.PcName.name==text[1]).\
-                    filter(data.Domain.name==text[0]).\
-                    one()
-            self.new_row(pc)
-            self.employee.pc.append(pc)
+        add_pcs = PCAdd(self.session, self.employee.pc)
+        if add_pcs.exec_() == QDialog.Accepted:
+            for pc in add_pcs.added_pcs:
+                self.new_row(pc)
+                self.employee.pc.append(pc)
 
     @QtCore.pyqtSlot()
     def refresh(self):
