@@ -444,7 +444,7 @@ class EmployeeInfo(Dialog):
         if not add_pcs:
             QMessageBox.warning(
                     self, 'Ошибка',
-                    'Куда уж больше? Все уже его'
+                    'Не из чего выбирать'
                     )
             return
         dlg.setOption(QInputDialog.UseListViewForComboBoxItems)
@@ -617,7 +617,7 @@ class EmployeeInfo(Dialog):
             msg_box = QMessageBox(self)
             msg_box.setIcon(QMessageBox.Question)
             msg_box.setWindowTitle('Уведомление')
-            msg_box.setText('Данные не сохранятся. Выйти?')
+            msg_box.setText('Данные не сохранятся')
             msg_box.setStandardButtons(
                 QMessageBox.Yes | QMessageBox.Cancel
             )

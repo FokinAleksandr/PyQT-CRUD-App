@@ -17,12 +17,12 @@ class RegisterEmployee(Dialog):
     def __init__(self, session):
         QDialog.__init__(self)
         self.session = session
+        self.added_pcs = []
         self.init_window()
         self.init_layouts()
 
     def init_window(self):
-        self.setFixedWidth(550)
-        self.setMaximumHeight(470)
+        self.setFixedWidth(700)
         self.setWindowModality(2)
         self.setWindowTitle('Регистрируем сотрудника')
         self.setWindowIcon(QIcon(r'pics\employee.png'))
@@ -137,20 +137,6 @@ class RegisterEmployee(Dialog):
         self.comments_edit.setClearButtonEnabled(True)
         form_layout.addRow(
             'Прочее:', self.comments_edit
-            )       
-        self.toolbutton = QToolButton(self)
-        self.toolbutton.setText('Выбрать')
-        self.toolmenu = Menu()
-        for tup in self.session.query(data.Domain.name, data.PcName.name).\
-            join(data.PcName).all():       
-            action = self.toolmenu.addAction(
-                QIcon(r'pics\pc.png'),
-                "{}/{}".format(tup[0], tup[1]))
-            action.setCheckable(True)
-        self.toolbutton.setMenu(self.toolmenu)
-        self.toolbutton.setPopupMode(QToolButton.InstantPopup)
-        form_layout.addRow(
-            'Выбор компьютеров:', self.toolbutton
             )
         self.shared_folder_edit = QCheckBox()
         form_layout.addRow(
@@ -160,6 +146,41 @@ class RegisterEmployee(Dialog):
         form_layout.addRow(
             'Сетевой принтер:', self.network_printer_edit
             )
+        #################################################################################### 
+        table_layout = QVBoxLayout()
+
+        self.model = QStandardItemModel() 
+        self.model.setHorizontalHeaderLabels(
+            ['Домен/Имя компьютера', 'MAC-адрес', 'Номер розетки',
+             'Как подключен', 'Серверные приложения',
+             'Windows OS', 'Windows OS key', 'Microsoft Office',
+             'Microsoft Office key', 'Антивирус', 'Клиент электронной почты',
+             'Прочее', 'Агент KES', 'Консультант', 'Гарант', '1C', 'КДС']
+            )
+        self.table = QTableView()
+        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.table.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.table.setTextElideMode(Qt.ElideNone)
+        self.table.setAlternatingRowColors(True)
+        self.table.setModel(self.model)
+        self.table.resizeColumnsToContents()
+
+        table_buttons_layout = QHBoxLayout()
+        add_table_row_button = QPushButton('Добавить компьютер')
+        add_table_row_button.setFixedSize(add_table_row_button.sizeHint())
+        add_table_row_button.clicked.connect(self.add_table_row)
+        delete_table_row_button = QPushButton('Открепить компьютер')
+        delete_table_row_button.setFixedSize(delete_table_row_button.sizeHint())
+        delete_table_row_button.clicked.connect(self.delete_table_row)
+        table_buttons_layout.addWidget(delete_table_row_button)
+        table_buttons_layout.addWidget(add_table_row_button)
+        table_buttons_layout.addStretch()
+
+        table_layout.addWidget(self.table)
+        table_layout.addLayout(table_buttons_layout)
+        form_layout.addRow(table_layout)
+        ####################################################################################
         form_layout.addRow(buttons_layout)
    
     @QtCore.pyqtSlot()
@@ -201,8 +222,53 @@ class RegisterEmployee(Dialog):
             join(data.Address).\
             filter(data.Address.name==index).\
             values()
-        self.block_edit.addItems(items) 
-  
+        self.block_edit.addItems(items)
+
+    @QtCore.pyqtSlot()
+    def add_table_row(self):
+        add_pcs = PCAdd(self.session, self.added_pcs)
+        if add_pcs.exec_() == QDialog.Accepted:
+            for pc in add_pcs.added_pcs:
+                self.added_pcs.append(pc)
+                self.model.appendRow([
+                        QStandardItem(
+                            QIcon(r'pics\pc.png'),
+                            pc.pcname.domain.name + '/' + pc.pcname.name
+                            ),
+                        QStandardItem(pc.mac_address),
+                        QStandardItem(pc.powersocket.name),
+                        QStandardItem(pc.connectiontype.name),
+                        QStandardItem(pc.app_server),
+                        QStandardItem(pc.windows.name),
+                        QStandardItem(pc.windows_os_key),
+                        QStandardItem(pc.office.name),
+                        QStandardItem(pc.ms_office_key),
+                        QStandardItem(pc.antivirus.name),
+                        QStandardItem(pc.mail_client),
+                        QStandardItem(pc.comments),
+                        QStandardItem('Есть' if pc.kes else 'Нет'),
+                        QStandardItem('Есть' if pc.consultant else 'Нет'),
+                        QStandardItem('Есть' if pc.guarantee else 'Нет'),
+                        QStandardItem('Есть' if pc.odin_s else 'Нет'),
+                        QStandardItem('Есть' if pc.kdc else 'Нет')
+                        ])
+
+    @QtCore.pyqtSlot()
+    def delete_table_row(self):
+        index = self.table.selectionModel().selectedRows()
+        try:
+            element = self.model.takeRow(index[0].row())
+        except IndexError:
+            QMessageBox.warning(
+                    self, 'Ошибка',
+                    'Выделите строку в таблице'
+                    )
+            return
+        self.added_pcs.remove(
+            self.session.query(data.Pc).\
+            filter_by(mac_address=element[1].text()).one()
+            )
+
     @QtCore.pyqtSlot()
     def validate_input(self):
         if not self.surname_edit.text()\
@@ -288,7 +354,6 @@ class RegisterEmployee(Dialog):
         if not self.accept():
             self.session.rollback()
 
-
     def process_data(self):
         QApplication.setOverrideCursor(Qt.WaitCursor)
         employee = data.Employee(
@@ -337,29 +402,94 @@ class RegisterEmployee(Dialog):
             room.block = block
       
         employee.room = room
-
-        for action in self.toolmenu.actions():
-            if action.isChecked():
-                domain_text, pcname_text = action.text().split('/')
-                pc = self.session.query(data.Pc).\
-                    join(data.PcName).\
-                    join(data.Domain).\
-                    filter(data.PcName.name==pcname_text).\
-                    filter(data.Domain.name==domain_text).\
-                    one()
-                employee.pc.append(pc)
+        employee.pc = self.added_pcs
         QApplication.restoreOverrideCursor()
 
-class Menu(QMenu):
-    def __init__(self):
-        QMenu.__init__(self)
+class PCAdd(QDialog):
+    def __init__(self, session, added_pcs):
+        QDialog.__init__(self)
+        self.session = session
+        self.pcs_to_ignore = added_pcs
+        self.added_pcs = []
+        self.init_window()
+        self.build_layout()
 
-    def mouseReleaseEvent(self, e):
-        action = QMenu.activeAction(self)
-        if action and action.isEnabled():
-            action.setEnabled(False)
-            QMenu.mouseReleaseEvent(self, e)
-            action.setEnabled(True)
-            action.trigger()
-        else:
-            QMenu.mouseReleaseEvent(self, e)
+    def init_window(self):
+        self.setFixedSize(800, 450)
+        self.setWindowModality(2)
+        self.setWindowTitle('Добавление компьютеров')
+        self.setWindowIcon(QIcon(r'pics\pc.png'))
+
+    def build_layout(self):
+        QVBoxLayout(self)
+
+        self.model = QStandardItemModel() 
+        self.model.setHorizontalHeaderLabels(
+            ['Домен/Имя компьютера', 'MAC-адрес', 'Номер розетки',
+             'Как подключен', 'Серверные приложения',
+             'Windows OS', 'Windows OS key', 'Microsoft Office',
+             'Microsoft Office key', 'Антивирус', 'Клиент электронной почты',
+             'Прочее', 'Агент KES', 'Консультант', 'Гарант', '1C', 'КДС']
+            )
+        for pc in self.session.query(data.Pc).\
+                    filter(~data.Pc.mac_address.in_(
+                            [pc.mac_address for pc in self.pcs_to_ignore]
+                            )):
+            self.model.appendRow([
+                QStandardItem(QIcon(r'pics\pc.png'), pc.pcname.domain.name + '/' + pc.pcname.name),
+                QStandardItem(pc.mac_address),
+                QStandardItem(pc.powersocket.name),
+                QStandardItem(pc.connectiontype.name),
+                QStandardItem(pc.app_server),
+                QStandardItem(pc.windows.name),
+                QStandardItem(pc.windows_os_key),
+                QStandardItem(pc.office.name),
+                QStandardItem(pc.ms_office_key),
+                QStandardItem(pc.antivirus.name),
+                QStandardItem(pc.mail_client),
+                QStandardItem(pc.comments),
+                QStandardItem('Есть' if pc.kes else 'Нет'),
+                QStandardItem('Есть' if pc.consultant else 'Нет'),
+                QStandardItem('Есть' if pc.guarantee else 'Нет'),
+                QStandardItem('Есть' if pc.odin_s else 'Нет'),
+                QStandardItem('Есть' if pc.kdc else 'Нет')
+                ])
+
+        self.filter_proxy_model = QSortFilterProxyModel()
+        self.filter_proxy_model.setSourceModel(self.model)
+        self.filter_proxy_model.setFilterKeyColumn(0)
+
+        self.search_filter = QLineEdit()
+        self.search_filter.setFixedWidth(500)
+        self.search_filter.setClearButtonEnabled(True)
+        self.search_filter.setPlaceholderText('Поиск по домену/имени компьютера')
+        self.search_filter.textChanged.connect(self.filter_proxy_model.setFilterRegExp)
+        tooltip = QLabel('<p>Подсказка: зажмите CTRL, чтобы выбрать несколько записей</p>')
+
+        self.table = QTableView()
+        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.table.setTextElideMode(Qt.ElideNone)
+        self.table.setAlternatingRowColors(True)
+        self.table.setModel(self.filter_proxy_model)
+        self.table.resizeColumnsToContents()
+
+        self.add_pcs = QPushButton('Добавить выделенные')
+        self.add_pcs.setFixedSize(self.add_pcs.sizeHint())
+        self.add_pcs.clicked.connect(self.add_selected_pcs)
+
+        self.layout().addWidget(self.search_filter)
+        self.layout().addWidget(tooltip)
+        self.layout().addWidget(self.table)
+        self.layout().addWidget(self.add_pcs)
+
+    @QtCore.pyqtSlot()
+    def add_selected_pcs(self):
+        indexes = self.table.selectionModel().selectedRows()
+        for index in indexes:
+            mac = self.model.item(index.row(), 1).text()
+            self.added_pcs.append(
+                self.session.query(data.Pc).\
+                filter_by(mac_address=mac).one()
+                )
+        QDialog.accept(self)
