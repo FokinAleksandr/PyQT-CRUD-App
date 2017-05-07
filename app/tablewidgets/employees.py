@@ -6,13 +6,14 @@
 from app.editdialogs import employee
 from app.db import data
 from functools import partial
-from sqlalchemy import distinct, exc
+from sqlalchemy import exc
 from sqlalchemy.orm import joinedload
 from PyQt5 import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.Qt import *
+
 
 class EmployeeTable(QWidget):
     def __init__(self, *args, **kwargs):
@@ -92,7 +93,7 @@ class EmployeeTable(QWidget):
         self.main_table.setHorizontalHeaderLabels(
             ['ФИО', 'Логин', 'Должность', 'Отдел', 'Место работы', 'Телефон',
              'Email', 'Домен/Имя компьютера', '']
-            )
+        )
         self.layout().addLayout(filters_layout)
         self.layout().addWidget(self.main_table)
         QApplication.setOverrideCursor(Qt.WaitCursor)
@@ -105,31 +106,26 @@ class EmployeeTable(QWidget):
         self.address_filter.addItem('Все')
         self.address_filter.addItems(
             self.session.query(data.Address.name).values()
-            )
+        )
 
         self.block_filter.clear()
         self.block_filter.addItem('Все')
-        self.block_filter.addItems(
-            self.session.query(data.Block.name).\
-                distinct(data.Block.name).\
-                values()
-            )
-
+        self.block_filter.addItems(self.session.query(data.Block.name).distinct(data.Block.name).values())
         self.position_filter.clear()
         self.position_filter.addItem('')
         self.position_filter.addItems(
             row.name for row in self.session.query(data.Position) if row.name
-            )
+        )
 
         self.department_filter.clear()
         self.department_filter.addItem('')
         self.department_filter.addItems(
-           row.name for row in self.session.query(data.Department) if row.name
-           )
+            row.name for row in self.session.query(data.Department) if row.name
+        )
 
     def build_table(self):
         self.main_table.setRowCount(0)
-        employees = self.session.query(data.Employee).\
+        employees = self.session.query(data.Employee). \
             join(data.Room).\
             join(data.Block).\
             join(data.Address).\
@@ -137,36 +133,36 @@ class EmployeeTable(QWidget):
             outerjoin(data.Department).\
             outerjoin(data.Position).\
             filter(
-                data.Employee.fullname.ilike('%{}%'.format(self.fio_filter.text()))
-                ).\
+            data.Employee.fullname.ilike('%{}%'.format(self.fio_filter.text()))
+        ).\
             filter(
-                data.Employee.unique_login.ilike('%{}%'.format(self.login_filter.text()))
-                )
+            data.Employee.unique_login.ilike('%{}%'.format(self.login_filter.text()))
+        )
 
         if self.phone_filter.text():
             employees = employees.filter(
                 data.Phone.number.like('%{}%'.format(self.phone_filter.text()))
-                )
+            )
         if self.department_filter.currentText():
             employees = employees.filter(
                 data.Department.name.ilike('%{}%'.format(self.department_filter.currentText()))
-                )
+            )
         if self.position_filter.currentText():
             employees = employees.filter(
                 data.Position.name.ilike('%{}%'.format(self.position_filter.currentText()))
-                )
+            )
         if self.address_filter.currentText() != 'Все':
             employees = employees.filter(
-                data.Address.name==self.address_filter.currentText()
-                )
+                data.Address.name == self.address_filter.currentText()
+            )
         if self.block_filter.currentText() != 'Все':
             employees = employees.filter(
-                data.Block.name==self.block_filter.currentText()
-                )
+                data.Block.name == self.block_filter.currentText()
+            )
         if self.room_filter.text():
             employees = employees.filter(
                 data.Room.name.like('%{}%'.format(self.room_filter.text()))
-                )
+            )
 
         for row, employee in enumerate(employees):
             self.main_table.insertRow(row)
@@ -175,49 +171,49 @@ class EmployeeTable(QWidget):
                                     QTableWidgetItem(
                                         QIcon(r'pics\employee.png'),
                                         employee.fullname
-                                        )
+                                    )
                                     )
             self.main_table.setItem(row, 1,
                                     QTableWidgetItem(
                                         employee.unique_login
-                                        )
+                                    )
                                     )
             self.main_table.setItem(row, 2,
                                     QTableWidgetItem(
                                         employee.position.name
-                                        )
+                                    )
                                     )
             self.main_table.setItem(row, 3,
                                     QTableWidgetItem(
                                         employee.department.name
-                                        )
+                                    )
                                     )
             self.main_table.setItem(row, 4,
                                     QTableWidgetItem(
-                                        employee.room.block.address.name + 
-                                        ', ' + 
+                                        employee.room.block.address.name +
+                                        ', ' +
                                         employee.room.block.name +
                                         '\n' +
                                         employee.room.name
-                                        )
+                                    )
                                     )
             self.main_table.setItem(row, 5,
                                     QTableWidgetItem(
                                         ';\n'.join(
-                                            phone.number 
-                                            for phone 
+                                            phone.number
+                                            for phone
                                             in employee.phone
-                                            )
                                         )
+                                    )
                                     )
             self.main_table.setItem(row, 6,
                                     QTableWidgetItem(
                                         ';\n'.join(
-                                            email.email 
-                                            for email 
+                                            email.email
+                                            for email
                                             in employee.email
-                                            )
                                         )
+                                    )
                                     )
             self.main_table.setItem(row, 7,
                                     QTableWidgetItem(
@@ -225,16 +221,16 @@ class EmployeeTable(QWidget):
                                         ';\n'.join(
                                             pc.pcname.domain.name +
                                             '/' +
-                                            pc.pcname.name 
-                                            for pc 
+                                            pc.pcname.name
+                                            for pc
                                             in employee.pc
-                                            )
                                         )
+                                    )
                                     )
             edit_button = QPushButton('Просмотреть')
             edit_button.clicked.connect(
                 partial(self.edit_employee, employee_query_obj=employee)
-                )
+            )
             self.main_table.setCellWidget(row, 8, edit_button)
         self.main_table.resizeColumnsToContents()
 
@@ -244,25 +240,25 @@ class EmployeeTable(QWidget):
             edit_employee_window = employee.EmployeeInfo(self.session, employee_query_obj)
             if edit_employee_window.exec_() == QDialog.Accepted:
                 QApplication.setOverrideCursor(Qt.WaitCursor)
-                for room in self.session.query(data.Room).\
-                                options(joinedload(data.Room.employee)).\
-                                filter(data.Room.employee == None).\
-                                all():
+                for room in self.session.query(data.Room). \
+                        options(joinedload(data.Room.employee)). \
+                        filter(data.Room.employee == None). \
+                        all():
                     self.session.delete(room)
 
-                for position in self.session.query(data.Position).\
-                                options(joinedload(data.Position.employee)).\
-                                filter(data.Position.employee == None).\
-                                all():
+                for position in self.session.query(data.Position). \
+                        options(joinedload(data.Position.employee)). \
+                        filter(data.Position.employee == None). \
+                        all():
                     self.session.delete(position)
 
-                for department in self.session.query(data.Department).\
-                                options(joinedload(data.Department.employee)).\
-                                filter(data.Department.employee == None).\
-                                all():
+                for department in self.session.query(data.Department). \
+                        options(joinedload(data.Department.employee)). \
+                        filter(data.Department.employee == None). \
+                        all():
                     self.session.delete(department)
 
-                self.session.commit()                
+                self.session.commit()
                 self.set_filter_comboboxes()
                 self.build_table()
                 QApplication.restoreOverrideCursor()

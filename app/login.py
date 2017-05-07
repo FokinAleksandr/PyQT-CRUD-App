@@ -13,7 +13,6 @@ from PyQt5.QtCore import *
 from PyQt5.Qt import *
 
 
-
 class LoginWindow(QDialog):
     def __init__(self):
         QDialog.__init__(self)
@@ -26,7 +25,7 @@ class LoginWindow(QDialog):
         self.setWindowFlags(Qt.MSWindowsFixedSizeDialogHint)
 
         self.employeename_input = QLineEdit('bog')
-        self.password_input = QLineEdit('1234') 
+        self.password_input = QLineEdit('1234')
         self.password_input.setEchoMode(QLineEdit.Password)
         self.db_input = QLineEdit('diplom')
 
@@ -49,21 +48,20 @@ class LoginWindow(QDialog):
         layout.addRow('Database', self.db_input)
         layout.addRow('Host', self.host_input)
         layout.addRow('Port', self.port_input)
-        layout.addRow(button_box)    
+        layout.addRow(button_box)
 
     def handle_login(self):
         url = 'postgresql+psycopg2://{}:{}@{}:{}/{}'
         url = url.format(self.employeename_input.text(), self.password_input.text(),
-                        self.host_input.text(), self.port_input.text(), self.db_input.text()
-        )
+                         self.host_input.text(), self.port_input.text(), self.db_input.text()
+                         )
         try:
             engine = sqlalchemy.create_engine(url, echo=True)
             data.Base.metadata.create_all(engine)
         except ValueError:
             QMessageBox.warning(self, 'Ошибка!', 'Неправильно введены данные!')
-        except Exception:        
-            QMessageBox.warning(self, 'Ошибка!', 'Не удается подключиться к базе данных')   
+        except Exception:
+            QMessageBox.warning(self, 'Ошибка!', 'Не удается подключиться к базе данных')
         else:
             data.Session = sessionmaker(bind=engine, query_cls=data.Query)
             self.accept()
-        

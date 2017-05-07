@@ -4,8 +4,8 @@
 Excel generation
 """
 import xlsxwriter
-import os
 from app.db import data
+
 
 def run(filename, session):
     workbook = xlsxwriter.Workbook(filename)
@@ -47,10 +47,10 @@ def run(filename, session):
         worksheet.write('AA1', 'КДС', bold)
         worksheet.write('AB1', 'Доп информация о компьютере', bold)
         row = 1
-        for employee in session.query(data.Employee).\
-                            join(data.Room).\
-                            join(data.Block).\
-                            filter(data.Block.name==block.name):
+        for employee in session.query(data.Employee). \
+                join(data.Room). \
+                join(data.Block). \
+                filter(data.Block.name == block.name):
             worksheet.set_row(row, 50)
             print(employee.fullname)
             if len(employee.pc) > 1:

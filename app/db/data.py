@@ -7,10 +7,10 @@ PostgreSQL database tables
 from sqlalchemy.orm import relationship, exc, column_property
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm.query import Query as _Query
-from sqlalchemy import (Table, Column, Integer, String, Boolean, ForeignKey,
-                        UniqueConstraint, PrimaryKeyConstraint)
+from sqlalchemy import Table, Column, Integer, String, Boolean, ForeignKey, UniqueConstraint
 Base = declarative_base()
 Session = None
+
 
 class Query(_Query):
     def values(self):
@@ -19,10 +19,12 @@ class Query(_Query):
         except ValueError as e:
             raise MultipleValuesFound(str(e))
 
+
 class MultipleValuesFound(ValueError, exc.MultipleResultsFound):
     """
     raised when multiple values are found in a single result row
     """
+
 
 class Employee(Base):
     __tablename__   = 'employee'	
@@ -46,17 +48,20 @@ class Employee(Base):
     phone 		    = relationship('Phone', back_populates='employee', cascade='all, delete-orphan', passive_deletes=True)
     email           = relationship('Email', back_populates='employee', cascade='all, delete-orphan', passive_deletes=True)
 
+
 class Position(Base):
 	__tablename__   = 'position'	
 	position_id     = Column(Integer, primary_key=True)
 	name 		    = Column(String, unique=True, nullable=False)	
 	employee        = relationship('Employee', back_populates='position')
 
+
 class Department(Base):
 	__tablename__   = 'department'	
 	department_id 	= Column(Integer, primary_key=True)
 	name 			= Column(String, unique=True, nullable=False)	
 	employee        = relationship('Employee', back_populates='department')
+
 
 class Phone(Base):
     __tablename__   = 'phone'
@@ -65,12 +70,14 @@ class Phone(Base):
     number          = Column(String, unique=True, nullable=False)
     employee        = relationship('Employee', back_populates='phone')
 
+
 class Email(Base):
     __tablename__   = 'email'
     email_id        = Column(Integer, primary_key=True)
     employee_id     = Column(Integer, ForeignKey('employee.employee_id', ondelete = 'CASCADE'))
     email           = Column(String, unique=True, nullable=False)
     employee        = relationship('Employee', back_populates='email')
+
 
 class Room(Base):
     __tablename__   = 'room'
@@ -81,6 +88,7 @@ class Room(Base):
     employee        = relationship('Employee', back_populates='room')
     block           = relationship('Block', back_populates='room')
 
+
 class Block(Base):
     __tablename__   = 'block'
     __table_args__  = (UniqueConstraint('name', 'address_id', name='uix_name_address_id'),)
@@ -89,6 +97,7 @@ class Block(Base):
     address_id      = Column(Integer, ForeignKey('address.address_id', ondelete='CASCADE'))
     room 	        = relationship('Room', back_populates='block', cascade='all, delete-orphan', passive_deletes=True)
     address         = relationship('Address', back_populates='block')
+
 
 class Address(Base):
     __tablename__   = 'address'
@@ -99,7 +108,8 @@ class Address(Base):
 association_table = Table('association', Base.metadata,
 	Column('employee_id', Integer, ForeignKey('employee.employee_id')),
 	Column('pc_id', Integer, ForeignKey('pc.pc_id'))
-)
+    )
+
 
 class Pc(Base):
     __tablename__   = 'pc'
@@ -128,6 +138,7 @@ class Pc(Base):
     office          = relationship('Office', back_populates='pc')
     antivirus       = relationship('Antivirus', back_populates='pc') 
 
+
 class PcName(Base):
     __tablename__   = 'pcname'
     __table_args__  = (UniqueConstraint('name', 'domain_id', name='uix_name_domain_id'),)
@@ -137,11 +148,13 @@ class PcName(Base):
     pc              = relationship('Pc', back_populates='pcname')
     domain          = relationship('Domain', back_populates='pcname')
 
+
 class Domain(Base):
     __tablename__   = 'domain'
     domain_id       = Column(Integer, primary_key=True)
     name            = Column(String, unique=True, nullable=False)
     pcname          = relationship('PcName', back_populates='domain')
+
 
 class ConnectionType(Base):
     __tablename__   = 'connectiontype'
@@ -149,11 +162,13 @@ class ConnectionType(Base):
     name            = Column(String, unique=True, nullable=False)
     pc              = relationship('Pc', back_populates='connectiontype')
 
+
 class PowerSocket(Base):
     __tablename__   = 'powersocket'
     power_socket_id = Column(Integer, primary_key=True)
     name            = Column(String, unique=True, nullable=False)
     pc              = relationship('Pc', back_populates='powersocket')
+
 
 class Windows(Base):
     __tablename__   = 'windows'
@@ -161,11 +176,13 @@ class Windows(Base):
     name            = Column(String, unique=True, nullable=False)
     pc              = relationship('Pc', back_populates='windows')
 
+
 class Office(Base):
     __tablename__   = 'office'
     office_id       = Column(Integer, primary_key=True)
     name            = Column(String, unique=True, nullable=False)
     pc              = relationship('Pc', back_populates='office')
+
 
 class Antivirus(Base):
     __tablename__   = 'antivirus'

@@ -10,6 +10,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.Qt import *
 
+
 class PCAdd(QDialog):
     def __init__(self, session, pcs_to_ignore):
         QDialog.__init__(self)
@@ -28,18 +29,18 @@ class PCAdd(QDialog):
     def build_layout(self):
         QVBoxLayout(self)
 
-        self.model = QStandardItemModel() 
+        self.model = QStandardItemModel()
         self.model.setHorizontalHeaderLabels(
             ['Домен/Имя компьютера', 'MAC-адрес', 'Номер розетки',
              'Как подключен', 'Серверные приложения',
              'Windows OS', 'Windows OS key', 'Microsoft Office',
              'Microsoft Office key', 'Антивирус', 'Клиент электронной почты',
              'Прочее', 'Агент KES', 'Консультант', 'Гарант', '1C', 'КДС']
-            )
-        for pc in self.session.query(data.Pc).\
-                    filter(~data.Pc.mac_address.in_(
-                            [pc.mac_address for pc in self.pcs_to_ignore]
-                            )):
+        )
+        for pc in self.session.query(data.Pc). \
+                filter(~data.Pc.mac_address.in_(
+            [pc.mac_address for pc in self.pcs_to_ignore]
+        )):
             self.model.appendRow([
                 QStandardItem(QIcon(r'pics\pc.png'), pc.pcname.domain.name + '/' + pc.pcname.name),
                 QStandardItem(pc.mac_address),
@@ -58,7 +59,7 @@ class PCAdd(QDialog):
                 QStandardItem('Есть' if pc.guarantee else 'Нет'),
                 QStandardItem('Есть' if pc.odin_s else 'Нет'),
                 QStandardItem('Есть' if pc.kdc else 'Нет')
-                ])
+            ])
 
         self.filter_proxy_model = QSortFilterProxyModel()
         self.filter_proxy_model.setSourceModel(self.model)
@@ -94,7 +95,7 @@ class PCAdd(QDialog):
         for index in indexes:
             mac = self.model.item(index.row(), 1).text()
             self.added_pcs.append(
-                self.session.query(data.Pc).\
-                filter_by(mac_address=mac).one()
-                )
+                self.session.query(data.Pc). \
+                    filter_by(mac_address=mac).one()
+            )
         QDialog.accept(self)

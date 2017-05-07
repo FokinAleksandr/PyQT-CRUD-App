@@ -7,12 +7,12 @@ from app.db import data
 from app.tools.functions import get_or_create
 from app.tools.exitmethods import Dialog
 from app.tablewidgets.pcsadd import PCAdd
-from _functools import partial
 from PyQt5 import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
 from PyQt5.QtCore import *
 from PyQt5.Qt import *
+
 
 class EmployeeInfo(Dialog):
     def __init__(self, session, employee):
@@ -23,7 +23,7 @@ class EmployeeInfo(Dialog):
         self.fill_table_model()
 
         QStackedLayout(self)
-       
+
         self.read_only_widget = self.get_read_only_widget()
         self.setLabelsText()
         self.edit_info_widget = self.get_edit_info_widget()
@@ -42,8 +42,8 @@ class EmployeeInfo(Dialog):
             '{} <{}>'.format(
                 self.employee.fullname,
                 self.employee.unique_login
-                )
             )
+        )
         self.setWindowIcon(QIcon(r'pics\employee.png'))
 
     def fill_table_model(self):
@@ -53,7 +53,7 @@ class EmployeeInfo(Dialog):
              'Windows OS', 'Windows OS key', 'Microsoft Office',
              'Microsoft Office key', 'Антивирус', 'Клиент электронной почты',
              'Прочее', 'Агент KES', 'Консультант', 'Гарант', '1C', 'КДС']
-            )
+        )
         for pc in self.employee.pc:
             self.new_row(pc)
 
@@ -79,50 +79,50 @@ class EmployeeInfo(Dialog):
         self.fio_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         read_only_layout.addRow(
             '<b>Фамилия:</b>', self.fio_label
-            )
+        )
         self.login_label = QLabel()
         self.login_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         read_only_layout.addRow(
             '<b>Логин:</b>', self.login_label
-            )
+        )
         self.phone_label = QLabel()
         self.phone_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         read_only_layout.addRow(
             '<b>Телефоны:</b>', self.phone_label
-            )
+        )
         self.email_label = QLabel()
         self.email_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         read_only_layout.addRow(
             '<b>Emails:</b>', self.email_label
-            )
+        )
         self.position_label = QLabel()
         self.position_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         read_only_layout.addRow(
             '<b>Должность:</b>', self.position_label
-            )
+        )
         self.department_label = QLabel()
         self.department_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         read_only_layout.addRow(
             '<b>Отдел:</b>', self.department_label
-            )       
+        )
         self.address_label = QLabel()
         self.address_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         read_only_layout.addRow(
             '<b>Место работы:</b>', self.address_label
-            )
+        )
         self.shared_folder_label = QLabel()
         read_only_layout.addRow(
             '<b>Общие папки:</b>', self.shared_folder_label
-            )       
+        )
         self.network_printer_label = QLabel()
         read_only_layout.addRow(
             '<b>Сетевой принтер:</b>', self.network_printer_label
-            )
+        )
         self.comments_label = QLabel()
         self.comments_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         read_only_layout.addRow(
             '<b>Прочее:</b>', self.comments_label
-            )
+        )
 
         table = QTableView()
         table.setSelectionMode(QAbstractItemView.SingleSelection)
@@ -136,20 +136,10 @@ class EmployeeInfo(Dialog):
         return read_only_widget
 
     def setLabelsText(self):
-        self.fio_label.setText(
-            ' '.join(
-                [self.employee.surname,
-                 self.employee.name,
-                 self.employee.patronymic]
-                )
-            )
+        self.fio_label.setText(' '.join([self.employee.surname, self.employee.name, self.employee.patronymic]))
         self.login_label.setText(self.employee.unique_login)
-        self.phone_label.setText(
-            '; '.join([phone.number for phone in self.employee.phone])
-            )
-        self.email_label.setText(
-            '; '.join([email.email for email in self.employee.email])
-            )
+        self.phone_label.setText('; '.join([phone.number for phone in self.employee.phone]))
+        self.email_label.setText('; '.join([email.email for email in self.employee.email]))
         self.position_label.setText(self.employee.position.name)
         self.department_label.setText(self.employee.department.name)
         self.address_label.setText(
@@ -157,14 +147,10 @@ class EmployeeInfo(Dialog):
                 self.employee.room.block.address.name,
                 self.employee.room.block.name,
                 self.employee.room.name
-                )
             )
-        self.shared_folder_label.setText(
-            'Есть' if self.employee.shared_folder else 'Нет'
-            )  
-        self.network_printer_label.setText(
-            'Есть' if self.employee.network_printer else 'Нет'
-            )
+        )
+        self.shared_folder_label.setText('Есть' if self.employee.shared_folder else 'Нет')
+        self.network_printer_label.setText('Есть' if self.employee.network_printer else 'Нет')
         self.comments_label.setText(self.employee.comments)
 
     def get_edit_info_widget(self):
@@ -177,7 +163,7 @@ class EmployeeInfo(Dialog):
         self.refresh_button.clicked.connect(self.refresh)
         self.edit_button = QPushButton('Сохранить и выйти')
         self.edit_button.clicked.connect(self.validate_input)
-        ############################################################
+
         buttons_layout = QHBoxLayout()
         buttons_layout.addStretch()
         buttons_layout.addWidget(self.back_button)
@@ -186,81 +172,91 @@ class EmployeeInfo(Dialog):
 
         self.surname_edit = QLineEdit()
         self.surname_edit.setValidator(QRegExpValidator(QRegExp("[^ ]+")))
-        edit_info_layout.addRow('<b>Фамилия:<font color="red">*</font></b>', self.surname_edit)
+        edit_info_layout.addRow(
+            '<b>Фамилия:<font color="red">*</font></b>', self.surname_edit
+        )
         self.name_edit = QLineEdit()
         self.name_edit.setValidator(QRegExpValidator(QRegExp("[^ ]+")))
-        edit_info_layout.addRow('<b>Имя:<font color="red">*</font></b>', self.name_edit)
+        edit_info_layout.addRow(
+            '<b>Имя:<font color="red">*</font></b>', self.name_edit
+        )
         self.patronymic_edit = QLineEdit()
         self.patronymic_edit.setValidator(QRegExpValidator(QRegExp("[^ ]+")))
-        edit_info_layout.addRow('<b>Отчество:</b>', self.patronymic_edit)
+        edit_info_layout.addRow(
+            '<b>Отчество:</b>', self.patronymic_edit
+        )
         self.login_edit = QLineEdit()
         self.login_edit.setValidator(QRegExpValidator(QRegExp("[^ ]+")))
-        edit_info_layout.addRow('<b>Логин:<font color="red">*</font></b>', self.login_edit)
-        ############################################################################################
+        edit_info_layout.addRow(
+            '<b>Логин:<font color="red">*</font></b>', self.login_edit
+        )
+
         phones_layout = QHBoxLayout()
         self.phone1_edit = QLineEdit()
         self.phone2_edit = QLineEdit()
         self.phone3_edit = QLineEdit()
         phones_layout.addWidget(self.phone1_edit)
         phones_layout.addWidget(self.phone2_edit)
-        phones_layout.addWidget(self.phone3_edit)   
-        edit_info_layout.addRow('<b>Телефоны:</b>', phones_layout)
-        ############################################################################################  
+        phones_layout.addWidget(self.phone3_edit)
+        edit_info_layout.addRow(
+            '<b>Телефоны:</b>', phones_layout
+        )
+
         emails_layout = QHBoxLayout()
         self.email1_edit = QLineEdit()
         self.email2_edit = QLineEdit()
         self.email3_edit = QLineEdit()
         emails_layout.addWidget(self.email1_edit)
         emails_layout.addWidget(self.email2_edit)
-        emails_layout.addWidget(self.email3_edit)   
+        emails_layout.addWidget(self.email3_edit)
         edit_info_layout.addRow(
             '<b>Emails:</b>', emails_layout
-            )
-        ############################################################################################       
+        )
+
         self.position_edit = QComboBox()
-        self.position_edit.setEditable(True)   
+        self.position_edit.setEditable(True)
         edit_info_layout.addRow(
             '<b>Должность:</b>', self.position_edit
-            )
-        ############################################################################################
+        )
+
         self.department_edit = QComboBox()
         self.department_edit.setEditable(True)
         edit_info_layout.addRow(
             '<b>Отдел:</b>', self.department_edit
-            )
-        ############################################################################################
+        )
+
         self.address_edit = QComboBox()
         self.address_edit.currentIndexChanged[str].connect(
             self.changed_item_in_address_combobox
-            )
+        )
         edit_info_layout.addRow(
             '<b>Адрес:<font color="red">*</font></b>', self.address_edit
-            )
-        ############################################################################################
+        )
+
         self.block_edit = QComboBox()
         edit_info_layout.addRow(
             '<b>Корпус:<font color="red">*</font></b>', self.block_edit
-            )
-        ############################################################################################
+        )
+
         self.room_edit = QLineEdit()
         edit_info_layout.addRow(
             '<b>Комната:<font color="red">*</font></b>', self.room_edit
-            )
-        ############################################################################################
+        )
+
         self.comments_edit = QLineEdit()
         edit_info_layout.addRow(
             '<b>Прочее:</b>', self.comments_edit
-            )       
-        ############################################################################################
+        )
+
         self.shared_folder_edit = QCheckBox()
         edit_info_layout.addRow(
             '<b>Общие папки:</b>', self.shared_folder_edit
-            )
-        ############################################################################################      
+        )
+
         self.network_printer_edit = QCheckBox()
         edit_info_layout.addRow(
             '<b>Сетевой принтер:</b>', self.network_printer_edit
-            )
+        )
         self.table = QTableView()
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.SingleSelection)
@@ -320,27 +316,27 @@ class EmployeeInfo(Dialog):
 
         self.position_edit.addItems(
             self.session.query(data.Position.name).values()
-            )
+        )
         self.position_edit.setCurrentText(self.employee.position.name)
 
         self.department_edit.addItems(
             self.session.query(data.Department.name).values()
-            )
+        )
         self.department_edit.setCurrentText(self.employee.department.name)
 
         self.address_edit.addItems(
             self.session.query(data.Address.name).values()
-            )
+        )
         index = self.address_edit.findText(self.employee.room.block.address.name, Qt.MatchFixedString)
         if index >= 0:
             self.address_edit.setCurrentIndex(index)
 
         self.block_edit.addItems(
-            self.session.query(data.Block.name).\
-                join(data.Address).\
-                filter(data.Address.name==self.address_edit.currentText()).\
+            self.session.query(data.Block.name). \
+                join(data.Address). \
+                filter(data.Address.name == self.address_edit.currentText()). \
                 values()
-            )
+        )
         index = self.block_edit.findText(self.employee.room.block.name, Qt.MatchFixedString)
         if index >= 0:
             self.block_edit.setCurrentIndex(index)
@@ -352,7 +348,7 @@ class EmployeeInfo(Dialog):
         if self.employee.network_printer:
             self.network_printer_edit.setChecked(True)
 
-    @QtCore.pyqtSlot()  
+    @pyqtSlot()
     def delete_employee(self):
         msg_box = QMessageBox(self)
         msg_box.setIcon(QMessageBox.Question)
@@ -369,12 +365,12 @@ class EmployeeInfo(Dialog):
             self.session.delete(self.employee)
             QDialog.accept(self)
 
-    @QtCore.pyqtSlot()  
+    @pyqtSlot()
     def edit_employee_info(self):
         self.layout().setCurrentIndex(1)
         self.setFixedSize(800, 600)
 
-    @QtCore.pyqtSlot()  
+    @pyqtSlot()
     def back(self):
         msg_box = QMessageBox(self)
         msg_box.setIcon(QMessageBox.Question)
@@ -396,47 +392,47 @@ class EmployeeInfo(Dialog):
             self.layout().setCurrentIndex(0)
             self.setFixedSize(800, 450)
 
-    @QtCore.pyqtSlot(data.Pc) 
+    @pyqtSlot(data.Pc)
     def new_row(self, pc):
         self.sti.appendRow([
-                QStandardItem(QIcon(r'pics\pc.png'),pc.pcname.domain.name),
-                QStandardItem(pc.pcname.name),
-                QStandardItem(pc.mac_address),
-                QStandardItem(pc.powersocket.name),
-                QStandardItem(pc.connectiontype.name),
-                QStandardItem(pc.app_server),
-                QStandardItem(pc.windows.name),
-                QStandardItem(pc.windows_os_key),
-                QStandardItem(pc.office.name),
-                QStandardItem(pc.ms_office_key),
-                QStandardItem(pc.antivirus.name),
-                QStandardItem(pc.mail_client),
-                QStandardItem(pc.comments),
-                QStandardItem('Есть' if pc.kes else 'Нет'),
-                QStandardItem('Есть' if pc.consultant else 'Нет'),
-                QStandardItem('Есть' if pc.guarantee else 'Нет'),
-                QStandardItem('Есть' if pc.odin_s else 'Нет'),
-                QStandardItem('Есть' if pc.kdc else 'Нет')
-                ])
+            QStandardItem(QIcon(r'pics\pc.png'), pc.pcname.domain.name),
+            QStandardItem(pc.pcname.name),
+            QStandardItem(pc.mac_address),
+            QStandardItem(pc.powersocket.name),
+            QStandardItem(pc.connectiontype.name),
+            QStandardItem(pc.app_server),
+            QStandardItem(pc.windows.name),
+            QStandardItem(pc.windows_os_key),
+            QStandardItem(pc.office.name),
+            QStandardItem(pc.ms_office_key),
+            QStandardItem(pc.antivirus.name),
+            QStandardItem(pc.mail_client),
+            QStandardItem(pc.comments),
+            QStandardItem('Есть' if pc.kes else 'Нет'),
+            QStandardItem('Есть' if pc.consultant else 'Нет'),
+            QStandardItem('Есть' if pc.guarantee else 'Нет'),
+            QStandardItem('Есть' if pc.odin_s else 'Нет'),
+            QStandardItem('Есть' if pc.kdc else 'Нет')
+        ])
 
-    @QtCore.pyqtSlot()
+    @pyqtSlot()
     def delete_table_row(self):
         index = self.table.selectionModel().selectedRows()
         try:
             element = self.sti.takeRow(index[0].row())
         except IndexError:
             QMessageBox.warning(
-                    self, 'Ошибка',
-                    'Выделите строку в таблице'
-                    )
+                self, 'Ошибка',
+                'Выделите строку в таблице'
+            )
             return
-        pc = self.session.query(data.Pc).\
-            with_parent(self.employee).\
-            filter(data.Pc.mac_address==element[2].text()).\
+        pc = self.session.query(data.Pc). \
+            with_parent(self.employee). \
+            filter(data.Pc.mac_address == element[2].text()). \
             one()
         self.employee.pc.remove(pc)
 
-    @QtCore.pyqtSlot()
+    @pyqtSlot()
     def add_table_row(self):
         add_pcs = PCAdd(self.session, self.employee.pc)
         if add_pcs.exec_() == QDialog.Accepted:
@@ -444,73 +440,73 @@ class EmployeeInfo(Dialog):
                 self.new_row(pc)
                 self.employee.pc.append(pc)
 
-    @QtCore.pyqtSlot()
+    @pyqtSlot()
     def refresh(self):
         self.session.rollback()
         self.setLineEdits()
         self.sti.clear()
         self.fill_table_model()
 
-    @QtCore.pyqtSlot()        
+    @pyqtSlot()
     def validate_input(self):
-        if not self.surname_edit.text()\
-           or not self.name_edit.text()\
-           or not self.room_edit.text()\
-           or not self.login_edit.text():
+        if not self.surname_edit.text() \
+                or not self.name_edit.text() \
+                or not self.room_edit.text() \
+                or not self.login_edit.text():
             QMessageBox.warning(
-                self,'Предупреждение',
+                self, 'Предупреждение',
                 "Поля: 'Фамилия', 'Имя', 'Логин', 'Комната'" +
                 " -- обязательныe"
-                )
+            )
             return
 
         phones = [self.phone1_edit.text(), self.phone2_edit.text(), self.phone3_edit.text()]
         phones[:] = [phone for phone in phones if phone]
         if len(set(phones)) < len(phones) and len(phones) > 0:
             QMessageBox.warning(
-                    self, 'Предупреждение', 'Телефоны совпадают'
-                    )
+                self, 'Предупреждение', 'Телефоны совпадают'
+            )
             return
 
         emails = [self.email1_edit.text(), self.email2_edit.text(), self.email3_edit.text()]
         emails[:] = [email for email in emails if email]
         if len(set(emails)) < len(emails) and len(emails) > 0:
             QMessageBox.warning(
-                    self, 'Предупреждение', 'Email совпадают'
-                    )
+                self, 'Предупреждение', 'Email совпадают'
+            )
             return
 
         for phone in [self.phone1_edit, self.phone2_edit, self.phone3_edit]:
-            stmt = self.session.query(data.Phone).\
-                join(data.Employee).\
-                filter(data.Employee.name!=self.employee.name).\
-                filter(data.Phone.number==phone.text())
+            stmt = self.session.query(data.Phone). \
+                join(data.Employee). \
+                filter(data.Employee.name != self.employee.name). \
+                filter(data.Phone.number == phone.text())
 
             if self.session.query(stmt.exists()).scalar():
                 QMessageBox.warning(
                     self, 'Предупреждение', 'Введенный телефон уже есть в базе'
-                    )
+                )
                 return
 
         for email in [self.email1_edit, self.email2_edit, self.email3_edit]:
-            stmt = self.session.query(data.Email).\
-                join(data.Employee).\
-                filter(data.Employee.name!=self.employee.name).\
-                filter(data.Email.email==email.text())
+            stmt = self.session.query(data.Email). \
+                join(data.Employee). \
+                filter(data.Employee.name != self.employee.name). \
+                filter(data.Email.email == email.text())
 
             if self.session.query(stmt.exists()).scalar():
                 QMessageBox.warning(
                     self, 'Предупреждение', 'Введенный email уже есть в базе'
-                    )
+                )
                 return
-        
-        stmt = self.session.query(data.Employee).\
-            filter(data.Employee.unique_login==self.login_edit.text()).\
-            filter(data.Employee.unique_login!=self.employee.unique_login)
+
+        stmt = self.session.query(data.Employee). \
+            filter(data.Employee.unique_login == self.login_edit.text()). \
+            filter(data.Employee.unique_login != self.employee.unique_login)
         if self.session.query(stmt.exists()).scalar():
             QMessageBox.warning(
                 self, 'Предупреждение', 'Введенный логин уже есть в базе'
-                )
+            )
             return
 
         if self.employee.surname != self.surname_edit.text():
@@ -521,7 +517,7 @@ class EmployeeInfo(Dialog):
             self.employee.patronymic = self.patronymic_edit.text()
         if self.employee.unique_login != self.login_edit.text():
             self.employee.unique_login = self.login_edit.text()
-        
+
         for phone in self.employee.phone:
             if phone.number not in phones:
                 self.session.delete(phone)
@@ -538,29 +534,29 @@ class EmployeeInfo(Dialog):
 
         if self.employee.position.name != self.position_edit.currentText():
             self.employee.position = (
-            get_or_create(
-                self.session, data.Position,
-                name=self.position_edit.currentText()
+                get_or_create(
+                    self.session, data.Position,
+                    name=self.position_edit.currentText()
                 )
             )
-            
+
         if self.employee.department.name != self.department_edit.currentText():
             self.employee.department = (
                 get_or_create(
-                    self.session, data.Department, 
+                    self.session, data.Department,
                     name=self.department_edit.currentText()
-                    )
                 )
+            )
 
-        block = self.session.query(data.Block).\
-                    join(data.Address).\
-                    filter(data.Block.name==self.block_edit.currentText()).\
-                    filter(data.Address.name==self.address_edit.currentText()).\
-                    one()
-        room = self.session.query(data.Room).\
-                    join(data.Block).\
-                    filter(data.Room.name==self.room_edit.text()).\
-                    first()
+        block = self.session.query(data.Block). \
+            join(data.Address). \
+            filter(data.Block.name == self.block_edit.currentText()). \
+            filter(data.Address.name == self.address_edit.currentText()). \
+            one()
+        room = self.session.query(data.Room). \
+            join(data.Block). \
+            filter(data.Room.name == self.room_edit.text()). \
+            first()
         if not room:
             room = data.Room(name=self.room_edit.text())
             room.block = block
@@ -584,9 +580,9 @@ class EmployeeInfo(Dialog):
     @QtCore.pyqtSlot(str)
     def changed_item_in_address_combobox(self, index):
         self.block_edit.clear()
-        items = self.session.query(data.Block.name).\
-            join(data.Address).\
-            filter(data.Address.name==index).\
+        items = self.session.query(data.Block.name). \
+            join(data.Address). \
+            filter(data.Address.name == index). \
             values()
         self.block_edit.addItems(items)
 
