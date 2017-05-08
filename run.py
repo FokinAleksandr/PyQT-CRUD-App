@@ -3,8 +3,8 @@
 import sys
 import os
 from app import main
-if __name__ == '__main__':
 
+
+if __name__ == '__main__':
     os.chdir((os.path.dirname(os.path.realpath(__file__))))
-    from app import main
     sys.exit(main.run())
