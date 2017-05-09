@@ -37,10 +37,8 @@ class PCAdd(QDialog):
              'Microsoft Office key', 'Антивирус', 'Клиент электронной почты',
              'Прочее', 'Агент KES', 'Консультант', 'Гарант', '1C', 'КДС']
         )
-        for pc in self.session.query(data.Pc). \
-                filter(~data.Pc.mac_address.in_(
-            [pc.mac_address for pc in self.pcs_to_ignore]
-        )):
+
+        for pc in [pc for pc in self.session.query(data.Pc).all() if pc not in self.pcs_to_ignore]:
             self.model.appendRow([
                 QStandardItem(QIcon(r'pics\pc.png'), pc.pcname.domain.name + '/' + pc.pcname.name),
                 QStandardItem(pc.mac_address),
@@ -61,6 +59,7 @@ class PCAdd(QDialog):
                 QStandardItem('Есть' if pc.kdc else 'Нет')
             ])
 
+
         self.filter_proxy_model = QSortFilterProxyModel()
         self.filter_proxy_model.setSourceModel(self.model)
         self.filter_proxy_model.setFilterKeyColumn(0)
@@ -73,6 +72,7 @@ class PCAdd(QDialog):
         tooltip = QLabel('<p>Подсказка: зажмите CTRL, чтобы выбрать несколько записей</p>')
 
         self.table = QTableView()
+        self.table.setSortingEnabled(True)
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.table.setTextElideMode(Qt.ElideNone)
@@ -89,7 +89,7 @@ class PCAdd(QDialog):
         self.layout().addWidget(self.table)
         self.layout().addWidget(self.add_pcs)
 
-    @QtCore.pyqtSlot()
+    @pyqtSlot()
     def add_selected_pcs(self):
         indexes = self.table.selectionModel().selectedRows()
         for index in indexes:

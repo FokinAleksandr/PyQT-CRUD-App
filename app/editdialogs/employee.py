@@ -439,6 +439,7 @@ class EmployeeInfo(Dialog):
             for pc in add_pcs.added_pcs:
                 self.new_row(pc)
                 self.employee.pc.append(pc)
+        self.table.resizeColumnsToContents()
 
     @pyqtSlot()
     def refresh(self):
@@ -577,7 +578,7 @@ class EmployeeInfo(Dialog):
             self.sti.clear()
             self.fill_table_model()
 
-    @QtCore.pyqtSlot(str)
+    @pyqtSlot(str)
     def changed_item_in_address_combobox(self, index):
         self.block_edit.clear()
         items = self.session.query(data.Block.name). \

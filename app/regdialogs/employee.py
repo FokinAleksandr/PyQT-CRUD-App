@@ -160,6 +160,7 @@ class RegisterEmployee(Dialog):
              'Прочее', 'Агент KES', 'Консультант', 'Гарант', '1C', 'КДС']
         )
         self.table = QTableView()
+        self.table.setSortingEnabled(True)
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.setSelectionMode(QAbstractItemView.SingleSelection)
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)

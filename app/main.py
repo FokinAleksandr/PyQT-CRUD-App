@@ -7,7 +7,7 @@ import sys
 import os
 from app import login, excel
 from app.regdialogs import address, employee, pc
-from app.tablewidgets import employees
+from app.tablewidgets import employees, pcs
 from app.db import data
 from sqlalchemy import exc
 from PyQt5 import *
@@ -52,12 +52,26 @@ class MainWindow(QMainWindow):
         )
 
     def display_data(self):
-        self.employee_table = employees.EmployeeTable()
-
-        tab_widget = QTabWidget()
-        tab_widget.addTab(self.employee_table, "Сотрудники")
-
-        self.setCentralWidget(tab_widget)
+        session = data.Session()
+        try:
+            self.employee_table = employees.EmployeeTable(session, self)
+            self.pcs_table = pcs.PcsTable(session, self)
+            tab_widget = QTabWidget()
+            tab_widget.addTab(self.employee_table, "Сотрудники")
+            tab_widget.addTab(self.pcs_table, "Компьютеры")
+            self.setCentralWidget(tab_widget)
+        except exc.IntegrityError as errmsg:
+            print(errmsg)
+            session.rollback()
+            session.close()
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setText("Критическая ошибка базы данных")
+            msg.setWindowTitle("Критическая ошибка")
+            msg.setDetailedText(errmsg)
+            msg.setStandardButtons(QMessageBox.Ok)
+            msg.buttonClicked.connect(sys.exit)
+        
 
     def add_employee(self):
         session = data.Session()
@@ -72,15 +86,19 @@ class MainWindow(QMainWindow):
                 QApplication.setOverrideCursor(Qt.WaitCursor)
                 self.employee_table.set_filter_comboboxes()
                 self.employee_table.build_table()
+                self.pcs_table.update_table_content()
                 QApplication.restoreOverrideCursor()
                 print("Закоммитили")
         except exc.IntegrityError as errmsg:
             print(errmsg)
             session.rollback()
-            QMessageBox.critical(
-                self, 'Критическая ошибка',
-                'Ошибка базы данных. Попробуйте еще раз.'
-            )
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setText("Критическая ошибка базы данных")
+            msg.setWindowTitle("Критическая ошибка")
+            msg.setDetailedText(errmsg)
+            msg.setStandardButtons(QMessageBox.Ok)
+            msg.buttonClicked.connect(sys.exit)
         else:
             print('Все успешно')
         finally:
@@ -92,18 +110,24 @@ class MainWindow(QMainWindow):
             reg_pc_window = pc.RegisterPC(session)
             if reg_pc_window.exec_() == QDialog.Accepted:
                 session.commit()
-                self.employee_table.set_filter_comboboxes()
                 QMessageBox.information(
                     self, 'Уведомление',
                     'Компьютер успешно добавлен'
                 )
+                QApplication.setOverrideCursor(Qt.WaitCursor)
+                self.employee_table.build_table()
+                self.pcs_table.update_table_content()
+                QApplication.restoreOverrideCursor()
         except exc.IntegrityError as errmsg:
             print(errmsg)
             session.rollback()
-            QMessageBox.critical(
-                self, 'Критическая ошибка',
-                'Ошибка базы данных. Попробуйте еще раз.'
-            )
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setText("Критическая ошибка базы данных")
+            msg.setWindowTitle("Критическая ошибка")
+            msg.setDetailedText(errmsg)
+            msg.setStandardButtons(QMessageBox.Ok)
+            msg.buttonClicked.connect(sys.exit)
         else:
             print('Все успешно')
         finally:
@@ -120,10 +144,13 @@ class MainWindow(QMainWindow):
         except exc.IntegrityError as errmsg:
             print(errmsg)
             session.rollback()
-            QMessageBox.critical(
-                self, 'Критическая ошибка',
-                'Ошибка базы данных. Попробуйте еще раз.'
-            )
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setText("Критическая ошибка базы данных")
+            msg.setWindowTitle("Критическая ошибка")
+            msg.setDetailedText(errmsg)
+            msg.setStandardButtons(QMessageBox.Ok)
+            msg.buttonClicked.connect(sys.exit)
         else:
             print('Все успешно')
         finally:
@@ -167,7 +194,6 @@ class MainWindow(QMainWindow):
         screen_center = QDesktopWidget().availableGeometry().center()
         frame_geometry.moveCenter(screen_center)
         self.move(frame_geometry.topLeft())
-
 
 def run():
     app = QApplication([])

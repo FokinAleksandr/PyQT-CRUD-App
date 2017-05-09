@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 """
-Заводим новых работников
+Вкладка работников
 """
 from app.editdialogs import employee
 from app.db import data
@@ -16,38 +16,45 @@ from PyQt5.Qt import *
 
 
 class EmployeeTable(QWidget):
-    def __init__(self, *args, **kwargs):
-        QWidget.__init__(self, *args, **kwargs)
-        self.session = data.Session()
+    def __init__(self, session, parent):
+        QWidget.__init__(self)
+        self.session = session
+        self.parent = parent
         QVBoxLayout(self)
+        self.layout().addLayout(self.build_filters_layout())
+        self.layout().addWidget(self.build_table())
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        self.set_filter_comboboxes()
+        self.fill_table()
+        QApplication.restoreOverrideCursor()
 
+    def build_filters_layout(self):
         filters_layout = QHBoxLayout()
-        #########################################################
+
         personal_info_layout = QVBoxLayout()
+        personal_info_labels_layout = QVBoxLayout()
 
         self.fio_filter = QLineEdit()
         self.fio_filter.setFixedWidth(230)
         self.fio_filter.setPlaceholderText('ФИО')
+        personal_info_labels_layout.addWidget(QLabel('<h4>ФИО</h4>'))
         personal_info_layout.addWidget(self.fio_filter)
 
         self.login_filter = QLineEdit()
         self.login_filter.setFixedWidth(230)
         self.login_filter.setPlaceholderText('Логин')
+        personal_info_labels_layout.addWidget(QLabel('<h4>Логин</h4>'))
         personal_info_layout.addWidget(self.login_filter)
 
         self.phone_filter = QLineEdit()
         self.phone_filter.setFixedWidth(100)
         self.phone_filter.setPlaceholderText('Телефон')
-        personal_info_layout.addWidget(self.phone_filter)
-
-        personal_info_labels_layout = QVBoxLayout()
-        personal_info_labels_layout.addWidget(QLabel('<h4>ФИО</h4>'))
-        personal_info_labels_layout.addWidget(QLabel('<h4>Логин</h4>'))
         personal_info_labels_layout.addWidget(QLabel('<h4>Телефон</h4>'))
+        personal_info_layout.addWidget(self.phone_filter)
 
         filters_layout.addLayout(personal_info_labels_layout)
         filters_layout.addLayout(personal_info_layout)
-        #########################################################
+
         address_info_layout = QHBoxLayout()
 
         self.address_filter = QComboBox()
@@ -59,7 +66,7 @@ class EmployeeTable(QWidget):
         self.room_filter.setFixedWidth(50)
         self.room_filter.setPlaceholderText('Комната')
         address_info_layout.addWidget(self.room_filter)
-        #########################################################
+
         employee_info_layout = QVBoxLayout()
 
         self.position_filter = QComboBox()
@@ -77,14 +84,18 @@ class EmployeeTable(QWidget):
         employee_info_labels_layout.addWidget(QLabel('<h4>Место Работы</h4>'))
         filters_layout.addLayout(employee_info_labels_layout)
         filters_layout.addLayout(employee_info_layout)
-        #########################################################
+
         find_button = QPushButton('Найти')
         find_button.setFixedSize(80, 80)
-        find_button.clicked.connect(self.build_table)
+        find_button.clicked.connect(self.fill_table)
         filters_layout.addWidget(find_button)
         filters_layout.addStretch()
 
+        return filters_layout
+
+    def build_table(self):
         self.main_table = QTableWidget()
+        self.main_table.setSortingEnabled(True)
         self.main_table.setSelectionMode(QAbstractItemView.SingleSelection)
         self.main_table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.main_table.setTextElideMode(Qt.ElideNone)
@@ -94,12 +105,8 @@ class EmployeeTable(QWidget):
             ['ФИО', 'Логин', 'Должность', 'Отдел', 'Место работы', 'Телефон',
              'Email', 'Домен/Имя компьютера', '']
         )
-        self.layout().addLayout(filters_layout)
-        self.layout().addWidget(self.main_table)
-        QApplication.setOverrideCursor(Qt.WaitCursor)
-        self.set_filter_comboboxes()
-        self.build_table()
-        QApplication.restoreOverrideCursor()
+        
+        return self.main_table    
 
     def set_filter_comboboxes(self):
         self.address_filter.clear()
@@ -123,21 +130,17 @@ class EmployeeTable(QWidget):
             row.name for row in self.session.query(data.Department) if row.name
         )
 
-    def build_table(self):
+    def fill_table(self):
         self.main_table.setRowCount(0)
-        employees = self.session.query(data.Employee). \
+        employees = self.session.query(data.Employee).\
             join(data.Room).\
             join(data.Block).\
             join(data.Address).\
             outerjoin(data.Phone).\
             outerjoin(data.Department).\
             outerjoin(data.Position).\
-            filter(
-            data.Employee.fullname.ilike('%{}%'.format(self.fio_filter.text()))
-        ).\
-            filter(
-            data.Employee.unique_login.ilike('%{}%'.format(self.login_filter.text()))
-        )
+            filter(data.Employee.fullname.ilike('%{}%'.format(self.fio_filter.text()))).\
+            filter(data.Employee.unique_login.ilike('%{}%'.format(self.login_filter.text())))
 
         if self.phone_filter.text():
             employees = employees.filter(
@@ -167,66 +170,18 @@ class EmployeeTable(QWidget):
         for row, employee in enumerate(employees):
             self.main_table.insertRow(row)
             self.main_table.setRowHeight(row, 50)
-            self.main_table.setItem(row, 0,
-                                    QTableWidgetItem(
-                                        QIcon(r'pics\employee.png'),
-                                        employee.fullname
-                                    )
-                                    )
-            self.main_table.setItem(row, 1,
-                                    QTableWidgetItem(
-                                        employee.unique_login
-                                    )
-                                    )
-            self.main_table.setItem(row, 2,
-                                    QTableWidgetItem(
-                                        employee.position.name
-                                    )
-                                    )
-            self.main_table.setItem(row, 3,
-                                    QTableWidgetItem(
-                                        employee.department.name
-                                    )
-                                    )
-            self.main_table.setItem(row, 4,
-                                    QTableWidgetItem(
-                                        employee.room.block.address.name +
-                                        ', ' +
-                                        employee.room.block.name +
-                                        '\n' +
-                                        employee.room.name
-                                    )
-                                    )
-            self.main_table.setItem(row, 5,
-                                    QTableWidgetItem(
-                                        ';\n'.join(
-                                            phone.number
-                                            for phone
-                                            in employee.phone
-                                        )
-                                    )
-                                    )
-            self.main_table.setItem(row, 6,
-                                    QTableWidgetItem(
-                                        ';\n'.join(
-                                            email.email
-                                            for email
-                                            in employee.email
-                                        )
-                                    )
-                                    )
-            self.main_table.setItem(row, 7,
-                                    QTableWidgetItem(
-                                        QIcon(r'pics\pc.png'),
-                                        ';\n'.join(
-                                            pc.pcname.domain.name +
-                                            '/' +
-                                            pc.pcname.name
-                                            for pc
-                                            in employee.pc
-                                        )
-                                    )
-                                    )
+            self.main_table.setItem(row, 0, QTableWidgetItem(QIcon(r'pics\employee.png'), employee.fullname))
+            self.main_table.setItem(row, 1, QTableWidgetItem(employee.unique_login))
+            self.main_table.setItem(row, 2, QTableWidgetItem(employee.position.name))
+            self.main_table.setItem(row, 3, QTableWidgetItem(employee.department.name))
+            self.main_table.setItem(row, 4, QTableWidgetItem(
+                employee.room.block.address.name + ', ' + employee.room.block.name +'\n' +employee.room.name
+                ))
+            self.main_table.setItem(row, 5, QTableWidgetItem(';\n'.join(phone.number for phone in employee.phone)))
+            self.main_table.setItem(row, 6, QTableWidgetItem(';\n'.join(email.email for email in employee.email)))
+            self.main_table.setItem(row, 7, QTableWidgetItem(QIcon(r'pics\pc.png'), ';\n'.join(
+                pc.pcname.domain.name + '/' + pc.pcname.name for pc in employee.pc
+                )))
             edit_button = QPushButton('Просмотреть')
             edit_button.clicked.connect(
                 partial(self.edit_employee, employee_query_obj=employee)
@@ -260,12 +215,19 @@ class EmployeeTable(QWidget):
 
                 self.session.commit()
                 self.set_filter_comboboxes()
-                self.build_table()
+                self.fill_table()
+                self.parent.pcs_table.update_table_content()
                 QApplication.restoreOverrideCursor()
                 print("Закоммитили")
         except exc.IntegrityError as errmsg:
             print(errmsg)
             self.session.rollback()
-            QMessageBox.critical(self, 'Критическая ошибка', 'Ошибка базы данных. Попробуйте еще раз.')
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setText("Критическая ошибка базы данных")
+            msg.setWindowTitle("Критическая ошибка")
+            msg.setDetailedText(errmsg)
+            msg.setStandardButtons(QMessageBox.Ok)
+            msg.buttonClicked.connect(sys.exit)
         else:
             print('Все успешно')
