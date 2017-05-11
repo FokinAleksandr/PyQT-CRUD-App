@@ -3,7 +3,9 @@
 """
 Вкладка компьютеров
 """
+from app.editdialogs import pc
 from app.db import data
+from sqlalchemy import exc
 from PyQt5 import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
@@ -36,6 +38,7 @@ class PcsTable(QWidget):
 
         self.table = QTableView()
         self.table.setSortingEnabled(True)
+        self.table.setSelectionMode(QAbstractItemView.SingleSelection)
         self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.table.setTextElideMode(Qt.ElideNone)
@@ -43,6 +46,9 @@ class PcsTable(QWidget):
         self.table.setModel(self.filter_proxy_model)
         self.table.resizeColumnsToContents()
 
+        edit_button = QPushButton('Изменить')
+        edit_button.setFixedSize(edit_button.sizeHint())
+        edit_button.clicked.connect(self.edit)
         self.layout().addWidget(self.search_filter)
         self.layout().addWidget(self.table)
 
@@ -80,3 +86,39 @@ class PcsTable(QWidget):
             self.table.resizeColumnsToContents()
         except Exception:
             pass
+
+    @pyqtSlot()
+    def edit(self):
+        index = self.table.selectionModel().selectedRows()
+        try:
+            element = self.model.item(index[0].row())
+        except IndexError:
+            QMessageBox.warning(
+                self, 'Ошибка',
+                'Выделите строку в таблице'
+            )
+            return
+        pc_query_obj = self.session.query(data.Pc). \
+            filter_by(mac_address=element[2].text()).one()
+        try:
+            edit_pc_window = pc.EditPc(self.session, pc_query_obj)
+            if edit_pc_window.exec_() == QDialog.Accepted:
+                QApplication.setOverrideCursor(Qt.WaitCursor)
+                self.session.commit()
+                self.update_table_content()
+                parent.employee_table.set_filter_comboboxes()
+                parent.employee_table.self.fill_table()
+                QApplication.restoreOverrideCursor()
+                print("Закоммитили")
+        except exc.IntegrityError as errmsg:
+            print(errmsg)
+            self.session.rollback()
+            msg = QMessageBox()
+            msg.setIcon(QMessageBox.Critical)
+            msg.setText("Критическая ошибка базы данных")
+            msg.setWindowTitle("Критическая ошибка")
+            msg.setDetailedText(errmsg)
+            msg.setStandardButtons(QMessageBox.Ok)
+            msg.buttonClicked.connect(sys.exit)
+        else:
+            print('Все успешно')

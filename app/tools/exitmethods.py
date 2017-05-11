@@ -11,23 +11,19 @@ class Dialog(QDialog):
         msg_box = QMessageBox(self)
         msg_box.setIcon(QMessageBox.Question)
         msg_box.setWindowTitle('Уведомление')
-        msg_box.setText('Сохранить данные')
+        msg_box.setText('Данные не сохранятся')
         msg_box.setStandardButtons(
-            QMessageBox.Yes | QMessageBox.No | QMessageBox.Cancel
+            QMessageBox.Yes | QMessageBox.Cancel
         )
         buttonY = msg_box.button(QMessageBox.Yes)
-        buttonY.setText('Да')
-        buttonN = msg_box.button(QMessageBox.No)
-        buttonN.setText('Нет')
-        buttonC = msg_box.button(QMessageBox.Cancel)
-        buttonC.setText('Отменить')
+        buttonY.setText('Выйти')
+        buttonN = msg_box.button(QMessageBox.Cancel)
+        buttonN.setText('Отмена')
         msg_box.exec_()
 
         if msg_box.clickedButton() == buttonY:
-            QDialog.accept(self)
-        elif msg_box.clickedButton() == buttonN:
             QDialog.closeEvent(self, evnt)
-        elif msg_box.clickedButton() == buttonC:
+        elif msg_box.clickedButton() == buttonN:
             evnt.ignore()
 
     def accept(self):

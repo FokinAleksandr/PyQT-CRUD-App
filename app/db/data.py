@@ -8,6 +8,7 @@ from sqlalchemy.orm import relationship, exc, column_property
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm.query import Query as _Query
 from sqlalchemy import Table, Column, Integer, String, Boolean, ForeignKey, UniqueConstraint
+
 Base = declarative_base()
 Session = None
 

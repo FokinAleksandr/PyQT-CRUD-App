@@ -59,7 +59,6 @@ class PCAdd(QDialog):
                 QStandardItem('Есть' if pc.kdc else 'Нет')
             ])
 
-
         self.filter_proxy_model = QSortFilterProxyModel()
         self.filter_proxy_model.setSourceModel(self.model)
         self.filter_proxy_model.setFilterKeyColumn(0)

@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 """
-Полная информация о сотруднике
+Редактирование информации о сотруднике
 """
 from app.db import data
 from app.tools.functions import get_or_create

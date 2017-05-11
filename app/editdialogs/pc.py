@@ -1,12 +1,10 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 """
-Регистрируем новые компьютеры
+Редактирование информации о компьютерах
 """
-from app.db import data
-from app.tools.functions import get_or_create
 from app.tools.exitmethods import Dialog
-from sqlalchemy.sql.operators import exists
+from app.db import data
 from PyQt5 import *
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import *
@@ -14,32 +12,30 @@ from PyQt5.QtCore import *
 from PyQt5.Qt import *
 
 
-class RegisterPC(Dialog):
-    def __init__(self, session):
+class EditPc(Dialog):
+    def __init__(self, session, pc):
         QDialog.__init__(self)
         self.session = session
+        self.pc = pc
         self.init_window()
-        self.init_layouts()
+        self.build()
+        self.fill()
 
     def init_window(self):
-        QToolTip.setFont(QFont('Font', 15))
         self.setFixedSize(700, 480)
         self.setWindowModality(2)
-        self.setWindowTitle('Регистрируем компьютер')
+        self.setWindowTitle(
+            '{}/{}'.format(
+                self.pc.pcname.domain.name,
+                self.pc.pcname.name
+            )
+        )
         self.setWindowIcon(QIcon(r'pics\pc.png'))
 
-    def init_layouts(self):
-        buttons_layout = QHBoxLayout()
+    def build(self):
+        QVBoxLayout(self)
 
-        back_button = QPushButton('Назад')
-        back_button.clicked.connect(self.close)
-        submit_button = QPushButton('Внести в базу данных')
-        submit_button.clicked.connect(self.validate_input)
-        buttons_layout.addWidget(back_button, alignment=Qt.AlignRight)
-        buttons_layout.addWidget(submit_button)
-
-        form_layout = QFormLayout(self)
-
+        form_layout = QFormLayout()
         self.pc_name_edit = QLineEdit()
         self.pc_name_edit.setValidator(
             QRegExpValidator(QRegExp("[^А-ЯA-Z ]+"))
@@ -63,7 +59,6 @@ class RegisterPC(Dialog):
             for pow_socket, in self.session.query(data.PowerSocket.name)
             if pow_socket
         ])
-        self.power_socket_edit.setCurrentText('')
         form_layout.addRow(
             'Номер розетки:', self.power_socket_edit
         )
@@ -77,7 +72,6 @@ class RegisterPC(Dialog):
             for conn_type, in self.session.query(data.ConnectionType.name)
             if conn_type
         ])
-        self.connection_type_edit.setCurrentText('')
         form_layout.addRow(
             'Как подлючен:', self.connection_type_edit
         )
@@ -88,7 +82,6 @@ class RegisterPC(Dialog):
             for domain, in self.session.query(data.Domain.name)
             if domain
         ])
-        self.domain_edit.setCurrentText('')
         form_layout.addRow(
             'Домен:', self.domain_edit
         )
@@ -107,7 +100,6 @@ class RegisterPC(Dialog):
             for windows, in self.session.query(data.Windows.name)
             if windows
         ])
-        self.windows_os_edit.setCurrentText('')
         form_layout.addRow(
             'Windows OS:', self.windows_os_edit
         )
@@ -121,7 +113,6 @@ class RegisterPC(Dialog):
             for office, in self.session.query(data.Office.name)
             if office
         ])
-        self.ms_office_edit.setCurrentText('')
         form_layout.addRow(
             'Microsoft Office:', self.ms_office_edit
         )
@@ -135,7 +126,6 @@ class RegisterPC(Dialog):
             for antivirus, in self.session.query(data.Antivirus.name)
             if antivirus
         ])
-        self.antivirus_edit.setCurrentText('')
         form_layout.addRow(
             'Антивирус:', self.antivirus_edit
         )
@@ -179,83 +169,42 @@ class RegisterPC(Dialog):
         form_layout.addRow(
             'КДС:', self.kdc_edit
         )
-        form_layout.addRow(buttons_layout)
 
-    @QtCore.pyqtSlot()
-    def validate_input(self):
+        buttons_layout = QHBoxLayout()
+        refresh_button = QPushButton('Сбросить')
+        refresh_button.clicked.connect(self.fill)
+        buttons_layout.addWidget(refresh_button)
+        exit_button = QPushButton('Выйти')
+        exit_button.clicked.connect(self.reject)
+        buttons_layout.addWidget(exit_button)
+        accept_button = QPushButton('Сохранить')
+        accept_button.clicked.connect(self.accept)
+        buttons_layout.addWidget(accept_button)
 
-        if not self.mac_edit.text() or not self.pc_name_edit.text():
-            QMessageBox.warning(
-                self, 'Предупреждение',
-                "Поля: 'Имя компьютера' и 'MAC-адрес' -- обязательные"
-            )
-            return
+        self.layout().addLayout(form_layout)
+        self.layout().addLayout(buttons_layout)
 
-        stmt = self.session.query(data.PcName).join(data.Domain). \
-            filter(data.PcName.name == self.pc_name_edit.text()). \
-            filter(data.Domain.name == self.domain_edit.currentText())
-        if self.session.query(stmt.exists()).scalar():
-            QMessageBox.warning(self,
-                                'Предупреждение',
-                                'Введенное имя компьютера уже существует в базе'
-                                )
-            return
-
-        stmt = self.session.query(data.Pc). \
-            filter(data.Pc.mac_address == self.mac_edit.text())
-        if self.session.query(stmt.exists()).scalar():
-            QMessageBox.warning(
-                self, 'Предупреждение', 'Введенный мак-адрес уже существует'
-            )
-            return
-
-        self.process_data()
-        if not self.accept():
-            self.session.rollback()
-
-    def process_data(self):
-        QApplication.setOverrideCursor(Qt.WaitCursor)
-        pcname = data.PcName(
-            name=self.pc_name_edit.text()
-        )
-
-        pcname.domain = get_or_create(
-            self.session, data.Domain,
-            name=self.domain_edit.currentText()
-        )
-
-        pc = data.Pc(
-            mac_address=self.mac_edit.text(),
-            windows_os_key=self.windows_os_key_edit.text(),
-            ms_office_key=self.ms_office_key_edit.text(),
-            kes=self.kes_edit.isChecked(),
-            guarantee=self.guarantee_edit.isChecked(),
-            odin_s=self.odin_s_edit.isChecked(),
-            kdc=self.kdc_edit.isChecked(),
-            mail_client=self.mail_client_edit.text(),
-            app_server=self.app_server_edit.text(),
-            consultant=self.consultant_edit.isChecked(),
-            comments=self.comments_edit.text(),
-        )
-        pc.pcname = pcname
-        pc.connectiontype = get_or_create(
-            self.session, data.ConnectionType,
-            name=self.connection_type_edit.currentText()
-        )
-        pc.powersocket = get_or_create(
-            self.session, data.PowerSocket,
-            name=self.power_socket_edit.currentText()
-        )
-        pc.windows = get_or_create(
-            self.session, data.Windows,
-            name=self.windows_os_edit.currentText()
-        )
-        pc.office = get_or_create(
-            self.session, data.Office,
-            name=self.ms_office_edit.currentText()
-        )
-        pc.antivirus = get_or_create(
-            self.session, data.Antivirus,
-            name=self.antivirus_edit.currentText()
-        )
-        QApplication.restoreOverrideCursor()
+    def fill(self):
+        self.pc_name_edit.setText(self.pc.pcname.name)
+        self.mac_edit.setText(self.pc.mac_address)
+        self.power_socket_edit.setCurrentText(self.pc.powersocket.name)
+        self.connection_type_edit.setCurrentText(self.pc.connectiontype.name)
+        self.domain_edit.setCurrentText(self.pc.pcname.domain.name)
+        self.app_server_edit.setText(self.pc.app_server)
+        self.windows_os_edit.setCurrentText(self.pc.windows.name)
+        self.ms_office_edit.setCurrentText(self.pc.office.name)
+        self.antivirus_edit.setCurrentText(self.pc.antivirus.name)
+        self.windows_os_key_edit.setText(self.pc.windows_os_key)
+        self.ms_office_key_edit.setText(self.pc.ms_office_key)
+        self.mail_client_edit.setText(self.pc.mail_client)
+        self.comments_edit.setText(self.pc.comments)
+        if self.pc.kes:
+            self.kes_edit.setChecked(True)
+        if self.pc.consultant:
+            self.consultant_edit.setChecked(True)
+        if self.pc.guarantee:
+            self.guarantee_edit.setChecked(True)
+        if self.pc.odin_s:
+            self.odin_s_edit.setChecked(True)
+        if self.pc.kdc:
+            self.kdc_edit.setChecked(True)
