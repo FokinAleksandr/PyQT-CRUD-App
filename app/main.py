@@ -85,7 +85,7 @@ class MainWindow(QMainWindow):
                 )
                 QApplication.setOverrideCursor(Qt.WaitCursor)
                 self.employee_table.set_filter_comboboxes()
-                self.employee_table.build_table()
+                self.employee_table.fill_table()
                 self.pcs_table.update_table_content()
                 QApplication.restoreOverrideCursor()
                 print("Закоммитили")
@@ -115,7 +115,7 @@ class MainWindow(QMainWindow):
                     'Компьютер успешно добавлен'
                 )
                 QApplication.setOverrideCursor(Qt.WaitCursor)
-                self.employee_table.build_table()
+                self.employee_table.fill_table()
                 self.pcs_table.update_table_content()
                 QApplication.restoreOverrideCursor()
         except exc.IntegrityError as errmsg:

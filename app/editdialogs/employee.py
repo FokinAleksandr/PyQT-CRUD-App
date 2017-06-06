@@ -362,8 +362,15 @@ class EmployeeInfo(Dialog):
         msg_box.exec_()
 
         if msg_box.clickedButton() == buttonY:
-            self.session.delete(self.employee)
-            QDialog.accept(self)
+            try:
+                self.session.delete(self.employee)
+            except Exception:
+                QMessageBox.warning(
+                self, 'Ошибка',
+                'Другой пользователь ввел изменения'
+                )
+            finally:
+                QDialog.accept(self)
 
     @pyqtSlot()
     def edit_employee_info(self):
@@ -509,7 +516,16 @@ class EmployeeInfo(Dialog):
                 self, 'Предупреждение', 'Введенный логин уже есть в базе'
             )
             return
+        try:
+            update_database()
+        except Exception:
+            QMessageBox.warning(
+            self, 'Ошибка',
+            'Другой пользователь ввел изменения'
+            )
+            self.accept()
 
+    def update_database():
         if self.employee.surname != self.surname_edit.text():
             self.employee.surname = self.surname_edit.text()
         if self.employee.name != self.name_edit.text():
